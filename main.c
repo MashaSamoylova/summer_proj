@@ -1,23 +1,30 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
 
-int hello() {
+int hello(int newsockfd) {
 	FILE *bus = fopen("bus", "r");
+	char buff[256];
 	if(bus == NULL) {
 		printf("not found the bus:(\n");
 		exit(1);
 	}
+
+	
 	char p;
-	while( (p = fgetc(bus)) != EOF) {
-		printf("%c", p);
+	int n = 7;
+	while( 0 <= n) {
+		fgets(buff, 255, bus);
+		write(newsockfd, buff, strlen(buff));
+		n--;
 	}
 	fclose(bus);
 
-	printf("МАРШРУТКА № 8\n");
+	write(newsockfd, "\nМАРШРУТКА № 8\n", 27);
 }
 
 int main(int argc, char *argv[]) {
@@ -52,7 +59,9 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 		       
-	bzero(buffer,256);
+	hello(newsockfd);
+	
+	/*bzero(buffer,256);
 	n = read(newsockfd,buffer,255);
 	
 	if (n < 0) {
@@ -67,7 +76,7 @@ int main(int argc, char *argv[]) {
 	if (n < 0) {
 		printf("ERROR writing to socket\n");
 		exit(1);
-	}
+	}*/
 	
 	close(newsockfd);
 	close(sockfd);
