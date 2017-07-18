@@ -36,6 +36,9 @@ int main(int argc, char *argv[]) {
 	struct sockaddr_in server, cli_addr;
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
 
+	int yes = 1;
+	setsockopt(socket_desc, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+	
 	if (socket_desc == -1) {
 		printf("Could not create socket\n");
 		exit(1);
