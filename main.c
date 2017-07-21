@@ -84,15 +84,6 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-/*	listen(socket_desc, 5);
-
-	client = sizeof(cli_addr);
-    newsockfd = accept(socket_desc, (struct sockaddr *) &cli_addr, &client);
-	if (newsockfd < 0) {
-		printf("ERROR on accept\n");
-		exit(1);
-	}
-*/		       
 	
 	hello(new_client(socket_desc));
 	hello(new_client(socket_desc));
