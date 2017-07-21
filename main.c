@@ -1,6 +1,7 @@
 #include <stdio.h> 
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h> // for sleep
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -25,6 +26,36 @@ int hello(int newsockfd) {
 	fclose(bus);
 
 	write(newsockfd, "\nМАРШРУТКА № 8\n", 27);
+	sleep(10);
+
+}
+
+int new_client(int socket_desc) {
+
+	static int i, state = 0;
+	switch (state) {
+		case 0: goto LABEL0;
+		case 1: goto LABEL1;
+	}
+
+LABEL0:
+	for(i = 0; i < 10; i++) {
+		state = 1;
+		listen(socket_desc, 5);
+
+		struct sockaddr_in cli_addr;
+		int newsockfd;
+		socklen_t client;
+
+		client = sizeof(cli_addr);
+		newsockfd = accept(socket_desc, (struct sockaddr *) &cli_addr, &client);
+		if (newsockfd < 0) {
+			printf("ERROR on accept\n");
+			exit(1);
+		}
+		return newsockfd;
+LABEL1:;
+	}		       
 }
 
 int main(int argc, char *argv[]) {
@@ -53,7 +84,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	listen(socket_desc, 5);
+/*	listen(socket_desc, 5);
 
 	client = sizeof(cli_addr);
     newsockfd = accept(socket_desc, (struct sockaddr *) &cli_addr, &client);
@@ -61,8 +92,10 @@ int main(int argc, char *argv[]) {
 		printf("ERROR on accept\n");
 		exit(1);
 	}
-		       
-	hello(newsockfd);
+*/		       
+	
+	hello(new_client(socket_desc));
+	hello(new_client(socket_desc));
 	
 	/*bzero(buffer,256);
 	n = read(newsockfd,buffer,255);
