@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include "client.h"
 
 int hello(int newsockfd) {
 	FILE *bus = fopen("bus", "r");
@@ -26,7 +27,6 @@ int hello(int newsockfd) {
 	fclose(bus);
 
 	write(newsockfd, "\nМАРШРУТКА № 8\n", 27);
-	sleep(10);
 
 }
 
@@ -45,10 +45,10 @@ LABEL0:
 
 		struct sockaddr_in cli_addr;
 		int newsockfd;
-		socklen_t client;
+		socklen_t client_ss;
 
-		client = sizeof(cli_addr);
-		newsockfd = accept(socket_desc, (struct sockaddr *) &cli_addr, &client);
+		client_ss = sizeof(cli_addr);
+		newsockfd = accept(socket_desc, (struct sockaddr *) &cli_addr, &client_ss);
 		if (newsockfd < 0) {
 			printf("ERROR on accept\n");
 			exit(1);
@@ -61,7 +61,7 @@ LABEL1:;
 int main(int argc, char *argv[]) {
 	int socket_desc, n;
 	int sockfd, newsockfd;
-	socklen_t client;
+	socklen_t client_ss;
 	char buffer[256];
 	
 	struct sockaddr_in server, cli_addr;
@@ -84,9 +84,22 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	
-	hello(new_client(socket_desc));
-	hello(new_client(socket_desc));
+	int i;
+	client all_clnts[4];
+	int count_of_clnts = 0;
+	for(i = 0; i < 2; i++) {
+		all_clnts[i].connection = new_client(socket_desc);
+		all_clnts[i].seat = rand();
+		all_clnts[i].ticket[0] = '\0';
+		hello(all_clnts[i].connection);
+		count_of_clnts++;
+	}
+
+	for(i = 0; i < count_of_clnts; i++) {
+		write(all_clnts[i].connection, "\nНАИВНЫЙ, ИДИ ДОМОЙ, мы никуда не поедем!!!1\n", 76);
+	}
+
+		
 	
 	/*bzero(buffer,256);
 	n = read(newsockfd,buffer,255);
