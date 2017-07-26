@@ -34,21 +34,36 @@ int hello(int newsockfd) {
 
 }
 
+int menu(int sockfd) {
+	
+	write(sockfd, "1. Чатик\n2. Заплатить за проезд\n3. Пересесть\n4. Выйти на следующей остановке\n", 133);
+}
+
+int read_answer(int sockfd) {
+	
+	menu(sockfd);
+	char buffer[10];
+	memset(buffer, 0, 10);
+	read(sockfd, buffer, 10); //наверно здесь нужно два, а не 10:D
+	write(sockfd, "Ты написал:\n", 21);
+	write(sockfd, buffer, 10);
+}
+
 int new_client(int socket_desc) {
 
-		listen(socket_desc, 5);
+	listen(socket_desc, 5);
 
-		struct sockaddr_in cli_addr;
-		int newsockfd;
-		socklen_t client_ss;
+	struct sockaddr_in cli_addr;
+	int newsockfd;
+	socklen_t client_ss;
 
-		client_ss = sizeof(cli_addr);
-		newsockfd = accept(socket_desc, (struct sockaddr *) &cli_addr, &client_ss);
-		if (newsockfd < 0) {
-			printf("ERROR on accept\n");
-			exit(1);
-		}
-		return newsockfd;
+	client_ss = sizeof(cli_addr);
+	newsockfd = accept(socket_desc, (struct sockaddr *) &cli_addr, &client_ss);
+	if (newsockfd < 0) {
+		printf("ERROR on accept\n");
+		exit(1);
+	}
+	return newsockfd;
 }
 
 int broad_cast(char* message) {
@@ -95,7 +110,7 @@ int main(int argc, char *argv[]) {
 		all_clnts[i].ticket[0] = '\0';
 		all_clnts[i].id = i;
 		
-		int err = pthread_create(&(id_of_threds[all_clnts[i].id]), NULL, &hello, all_clnts[i].connection);
+		int err = pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &hello, all_clnts[i].connection);
 
 		count_of_clnts++;
 	}
@@ -104,7 +119,15 @@ int main(int argc, char *argv[]) {
 		pthread_join(id_of_threds[i], NULL);
 	}
 
-	broad_cast("\nОтправляемся\nВаше слово:\n");
+	broad_cast("\nОтправляемся\n");
+	
+	for(i = 0; i < count_of_clnts; i++) {
+		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &read_answer, all_clnts[i].connection);
+	}
+
+	for(i = 0; i < count_of_clnts; i++) {
+		pthread_join(id_of_threds[i], NULL);
+	}
 
 	
 	close(newsockfd);
