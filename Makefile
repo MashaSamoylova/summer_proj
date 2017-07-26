@@ -1,2 +1,2 @@
 all: main.c client.h
-	gcc main.c -o main
+	gcc -pthread main.c -o main

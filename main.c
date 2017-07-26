@@ -6,7 +6,11 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <pthread.h>
 #include "client.h"
+
+client all_clnts[10];
+int count_of_clnts = 0;
 
 int hello(int newsockfd) {
 	FILE *bus = fopen("bus", "r");
@@ -32,15 +36,6 @@ int hello(int newsockfd) {
 
 int new_client(int socket_desc) {
 
-	static int i, state = 0;
-	switch (state) {
-		case 0: goto LABEL0;
-		case 1: goto LABEL1;
-	}
-
-LABEL0:
-	for(i = 0; i < 10; i++) {
-		state = 1;
 		listen(socket_desc, 5);
 
 		struct sockaddr_in cli_addr;
@@ -54,11 +49,19 @@ LABEL0:
 			exit(1);
 		}
 		return newsockfd;
-LABEL1:;
-	}		       
+}
+
+int broad_cast(char* message) {
+	int i;
+	for(i = 0; i < count_of_clnts; i++) {
+		write(all_clnts[i].connection, message, strlen(message));
+	}
 }
 
 int main(int argc, char *argv[]) {
+
+	pthread_t id_of_threds[3];
+
 	int socket_desc, n;
 	int sockfd, newsockfd;
 	socklen_t client_ss;
@@ -85,38 +88,24 @@ int main(int argc, char *argv[]) {
 	}
 
 	int i;
-	client all_clnts[4];
-	int count_of_clnts = 0;
-	for(i = 0; i < 2; i++) {
+	
+	for(i = 0; i < 3; i++) {
 		all_clnts[i].connection = new_client(socket_desc);
 		all_clnts[i].seat = rand();
 		all_clnts[i].ticket[0] = '\0';
-		hello(all_clnts[i].connection);
+		all_clnts[i].id = i;
+		
+		int err = pthread_create(&(id_of_threds[all_clnts[i].id]), NULL, &hello, all_clnts[i].connection);
+
 		count_of_clnts++;
 	}
 
 	for(i = 0; i < count_of_clnts; i++) {
-		write(all_clnts[i].connection, "\nНАИВНЫЙ, ИДИ ДОМОЙ, мы никуда не поедем!!!1\n", 76);
+		pthread_join(id_of_threds[i], NULL);
 	}
 
-		
-	
-	/*bzero(buffer,256);
-	n = read(newsockfd,buffer,255);
-	
-	if (n < 0) {
-		printf("ERROR reading from socket\n");
-		exit(1);
-	}
-	
-	printf("Here is the message: %s\n",buffer);
-	
-	n = write(newsockfd,"I got your message",18);
-	
-	if (n < 0) {
-		printf("ERROR writing to socket\n");
-		exit(1);
-	}*/
+	broad_cast("\nОтправляемся\nВаше слово:\n");
+
 	
 	close(newsockfd);
 	close(sockfd);
