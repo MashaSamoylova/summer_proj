@@ -11,6 +11,7 @@
 
 client all_clnts[10];
 int count_of_clnts = 0;
+pthread_t id_of_threds[3];
 
 int hello(int newsockfd) {
 	FILE *bus = fopen("bus", "r");
@@ -34,17 +35,17 @@ int hello(int newsockfd) {
 
 }
 
-int menu(int sockfd) {
+void menu(int sockfd) {
 	
 	write(sockfd, "1. Чатик\n2. Заплатить за проезд\n3. Пересесть\n4. Выйти на следующей остановке\n", 133);
 }
 
-int read_answer(int sockfd) {
+void read_answer(int sockfd) {
 	
 	menu(sockfd);
 	char buffer[10];
 	memset(buffer, 0, 10);
-	read(sockfd, buffer, 10); //наверно здесь нужно два, а не 10:D
+	read(sockfd, buffer, 10); //наверно здесь нужно два, а не 10
 	write(sockfd, "Ты написал:\n", 21);
 	write(sockfd, buffer, 10);
 }
@@ -66,6 +67,15 @@ int new_client(int socket_desc) {
 	return newsockfd;
 }
 
+void threads_are_terminated() {
+
+	int i;	
+	for(i = 0; i < count_of_clnts; i++) {
+		pthread_join(id_of_threds[i], NULL);
+	}
+
+}
+
 int broad_cast(char* message) {
 	int i;
 	for(i = 0; i < count_of_clnts; i++) {
@@ -75,7 +85,6 @@ int broad_cast(char* message) {
 
 int main(int argc, char *argv[]) {
 
-	pthread_t id_of_threds[3];
 
 	int socket_desc, n;
 	int sockfd, newsockfd;
@@ -115,9 +124,7 @@ int main(int argc, char *argv[]) {
 		count_of_clnts++;
 	}
 
-	for(i = 0; i < count_of_clnts; i++) {
-		pthread_join(id_of_threds[i], NULL);
-	}
+	threads_are_terminated();
 
 	broad_cast("\nОтправляемся\n");
 	
@@ -125,10 +132,7 @@ int main(int argc, char *argv[]) {
 		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &read_answer, all_clnts[i].connection);
 	}
 
-	for(i = 0; i < count_of_clnts; i++) {
-		pthread_join(id_of_threds[i], NULL);
-	}
-
+	threads_are_terminated();
 	
 	close(newsockfd);
 	close(sockfd);
