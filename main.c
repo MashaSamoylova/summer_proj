@@ -15,6 +15,23 @@ pthread_t id_of_threds[3];
 
 pthread_mutex_t mutex;
 
+void threads_are_terminated() {
+
+	int i;	
+	for(i = 0; i < count_of_clnts; i++) {
+		pthread_join(id_of_threds[i], NULL);
+	}
+
+}
+
+void disconnect_all_clients() {
+	
+	int i;
+	for(i = 0; i < count_of_clnts; i++) {
+		close(all_clnts[i].connection);
+	}
+}
+
 int hello(int newsockfd) {
 	FILE *bus = fopen("bus", "r");
 	char buff[256];
@@ -45,14 +62,13 @@ void menu(int sockfd) {
 void read_answer(int sockfd) {
 	
 	menu(sockfd);
-	pthread_mutex_lock(&mutex);
 	char buffer[10];
 	memset(buffer, 0, 10);
 	read(sockfd, buffer, 10); //наверно здесь нужно два, а не 10
 	write(sockfd, "Ты написал:\n", 21);
 	write(sockfd, buffer, 10);
 	printf("%s\n", buffer);
-	pthread_mutex_unlock(&mutex);
+
 }
 
 int new_client(int socket_desc) {
@@ -71,20 +87,14 @@ int new_client(int socket_desc) {
 	return newsockfd;
 }
 
-void threads_are_terminated() {
-
-	int i;	
-	for(i = 0; i < count_of_clnts; i++) {
-		pthread_join(id_of_threds[i], NULL);
-	}
-
-}
 
 int broad_cast(char* message) {
+
 	int i;
 	for(i = 0; i < count_of_clnts; i++) {
 		write(all_clnts[i].connection, message, strlen(message));
 	}
+
 }
 
 int main(int argc, char *argv[]) {
@@ -92,7 +102,7 @@ int main(int argc, char *argv[]) {
 	pthread_mutex_init(&mutex, NULL);
 
 	int socket_desc, n;
-	int sockfd, newsockfd;
+	int sockfd;
 	socklen_t client_ss;
 	char buffer[256];
 	
@@ -132,14 +142,15 @@ int main(int argc, char *argv[]) {
 	threads_are_terminated();
 
 	broad_cast("\nОтправляемся\n");
-	
+
 	for(i = 0; i < count_of_clnts; i++) {
 		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &read_answer, all_clnts[i].connection);
 	}
 
 	threads_are_terminated();
+	disconnect_all_clients();
+
 	
-	close(newsockfd);
 	close(sockfd);
 
 	return 0;
