@@ -13,6 +13,8 @@ client all_clnts[10];
 int count_of_clnts = 0;
 pthread_t id_of_threds[3];
 
+pthread_mutex_t mutex;
+
 int hello(int newsockfd) {
 	FILE *bus = fopen("bus", "r");
 	char buff[256];
@@ -43,11 +45,14 @@ void menu(int sockfd) {
 void read_answer(int sockfd) {
 	
 	menu(sockfd);
+	pthread_mutex_lock(&mutex);
 	char buffer[10];
 	memset(buffer, 0, 10);
 	read(sockfd, buffer, 10); //наверно здесь нужно два, а не 10
 	write(sockfd, "Ты написал:\n", 21);
 	write(sockfd, buffer, 10);
+	printf("%s\n", buffer);
+	pthread_mutex_unlock(&mutex);
 }
 
 int new_client(int socket_desc) {
@@ -62,7 +67,6 @@ int new_client(int socket_desc) {
 	newsockfd = accept(socket_desc, (struct sockaddr *) &cli_addr, &client_ss);
 	if (newsockfd < 0) {
 		printf("ERROR on accept\n");
-		exit(1);
 	}
 	return newsockfd;
 }
@@ -85,6 +89,7 @@ int broad_cast(char* message) {
 
 int main(int argc, char *argv[]) {
 
+	pthread_mutex_init(&mutex, NULL);
 
 	int socket_desc, n;
 	int sockfd, newsockfd;
