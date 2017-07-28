@@ -30,7 +30,18 @@ void disconnect_all_clients() {
 	}
 }
 
-int hello(int newsockfd) {
+int sit_down(int i) {
+	int st;
+	pthread_mutex_lock(&mutex_seat);
+	do {
+		st = rand()%25;
+	}while(seats[st]);	
+	seats[st] = 1;
+	all_clnts[i].seat = st;
+	pthread_mutex_unlock(&mutex_seat);
+}
+
+int hello(int i) {
 	FILE *bus = fopen("bus", "r");
 	char buff[256];
 	if(bus == NULL) {
@@ -42,23 +53,16 @@ int hello(int newsockfd) {
 	int n = 7;
 	while( 0 <= n) {
 		fgets(buff, 255, bus);
-		write(newsockfd, buff, strlen(buff));
+		write(all_clnts[i].connection, buff, strlen(buff));
 		n--;
 	}
 	fclose(bus);
 
-	write(newsockfd, "\nМАРШРУТКА № 8\n", 27);
-}
+	write(all_clnts[i].connection, "\nМАРШРУТКА № 8\n", 27);
+	char msg[40];
+	sprintf(msg, "Ты выбрал место: %d\n", all_clnts[i].seat);
+	write(all_clnts[i].connection, msg, 32);
 
-int sit_down(int i) {
-	int st;
-	pthread_mutex_lock(&mutex_seat);
-	do {
-		st = rand()%25;
-	}while(seats[st]);	
-	seats[st] = 1;
-	all_clnts[i].seat = st;
-	pthread_mutex_unlock(&mutex_seat);
 }
 
 void menu(int sockfd) {
@@ -132,13 +136,8 @@ int main(int argc, char *argv[]) {
 		all_clnts[i].ticket = 0;
 		all_clnts[i].id = i;
 		
-		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &hello, all_clnts[i].connection);
 		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &sit_down, i);
-
-		char msg[40] = "Ты выбрал место: ";
-		msg[31] = (char*)all_clnts[i].seat + 48;
-		msg[32] = "\n";
-		write(all_clnts[i].connection, msg, 32);
+		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &hello, i);
 
 		count_of_clnts++;
 	}
