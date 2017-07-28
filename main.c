@@ -11,21 +11,19 @@
 
 client all_clnts[10];
 int count_of_clnts = 0;
+int seats[25];
 pthread_t id_of_threds[3];
 
-pthread_mutex_t mutex;
+pthread_mutex_t mutex_seat;
 
 void threads_are_terminated() {
-
 	int i;	
 	for(i = 0; i < count_of_clnts; i++) {
 		pthread_join(id_of_threds[i], NULL);
 	}
-
 }
 
 void disconnect_all_clients() {
-	
 	int i;
 	for(i = 0; i < count_of_clnts; i++) {
 		close(all_clnts[i].connection);
@@ -40,7 +38,6 @@ int hello(int newsockfd) {
 		exit(1);
 	}
 
-	
 	char p;
 	int n = 7;
 	while( 0 <= n) {
@@ -51,16 +48,24 @@ int hello(int newsockfd) {
 	fclose(bus);
 
 	write(newsockfd, "\nМАРШРУТКА № 8\n", 27);
+}
 
+int sit_down(int i) {
+	int st;
+	pthread_mutex_lock(&mutex_seat);
+	do {
+		st = rand()%25;
+	}while(seats[st]);	
+	seats[st] = 1;
+	all_clnts[i].seat = st;
+	pthread_mutex_unlock(&mutex_seat);
 }
 
 void menu(int sockfd) {
-	
 	write(sockfd, "1. Чатик\n2. Заплатить за проезд\n3. Пересесть\n4. Выйти на следующей остановке\n", 133);
 }
 
 void read_answer(int sockfd) {
-	
 	menu(sockfd);
 	char buffer[10];
 	memset(buffer, 0, 10);
@@ -68,11 +73,9 @@ void read_answer(int sockfd) {
 	write(sockfd, "Ты написал:\n", 21);
 	write(sockfd, buffer, 10);
 	printf("%s\n", buffer);
-
 }
 
 int new_client(int socket_desc) {
-
 	listen(socket_desc, 5);
 
 	struct sockaddr_in cli_addr;
@@ -87,24 +90,20 @@ int new_client(int socket_desc) {
 	return newsockfd;
 }
 
-
-int broad_cast(char* message) {
-
+void broad_cast(char* message) {
 	int i;
 	for(i = 0; i < count_of_clnts; i++) {
 		write(all_clnts[i].connection, message, strlen(message));
 	}
-
 }
 
 int main(int argc, char *argv[]) {
-
-	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_init(&mutex_seat, NULL);
+	memset(seats, 0, 25);
 
 	int socket_desc, n;
 	int sockfd;
 	socklen_t client_ss;
-	char buffer[256];
 	
 	struct sockaddr_in server, cli_addr;
 	socket_desc = socket(AF_INET, SOCK_STREAM, 0);
@@ -130,11 +129,16 @@ int main(int argc, char *argv[]) {
 	
 	for(i = 0; i < 3; i++) {
 		all_clnts[i].connection = new_client(socket_desc);
-		all_clnts[i].seat = rand();
-		all_clnts[i].ticket[0] = '\0';
+		all_clnts[i].ticket = 0;
 		all_clnts[i].id = i;
 		
-		int err = pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &hello, all_clnts[i].connection);
+		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &hello, all_clnts[i].connection);
+		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &sit_down, i);
+
+		char msg[40] = "Ты выбрал место: ";
+		msg[31] = (char*)all_clnts[i].seat + 48;
+		msg[32] = "\n";
+		write(all_clnts[i].connection, msg, 32);
 
 		count_of_clnts++;
 	}
@@ -149,7 +153,6 @@ int main(int argc, char *argv[]) {
 
 	threads_are_terminated();
 	disconnect_all_clients();
-
 	
 	close(sockfd);
 
