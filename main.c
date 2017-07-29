@@ -11,7 +11,7 @@
 
 client all_clnts[10];
 int count_of_clnts = 0;
-int seats[25];
+int seats[28];
 pthread_t id_of_threds[3];
 
 pthread_mutex_t mutex_seat;
@@ -63,6 +63,26 @@ int hello(int i) {
 	sprintf(msg, "Ты выбрал место: %d\n", all_clnts[i].seat);
 	write(all_clnts[i].connection, msg, 32);
 
+}
+
+void seat_layout() {
+	int k = 0;
+	while(k < 28) {
+		if(k<10) {	
+			printf("  %d,%d) %d  %d       ", k, k+1, seats[k], seats[k+1]);
+		}
+		else {
+			printf("%d,%d) %d  %d       ", k, k+1, seats[k], seats[k+1]);
+		}
+		k+=2;
+		if(k<10) {
+			printf("  %d,%d) %d  %d\n", k, k+1, seats[k], seats[k+1]);
+		}
+		else {
+			printf("%d,%d) %d  %d\n", k, k+1, seats[k], seats[k+1]);
+		}
+		k+=2;
+	}
 }
 
 void menu(int sockfd) {
@@ -143,12 +163,15 @@ int main(int argc, char *argv[]) {
 	}
 
 	threads_are_terminated();
+	
+	seat_layout();
 
 	broad_cast("\nОтправляемся\n");
 
 	for(i = 0; i < count_of_clnts; i++) {
 		pthread_create( &(id_of_threds[all_clnts[i].id]), NULL, &read_answer, all_clnts[i].connection);
 	}
+
 
 	threads_are_terminated();
 	disconnect_all_clients();

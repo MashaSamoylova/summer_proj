@@ -1,6 +1,7 @@
 typedef struct {
 	int connection;
 	int seat;
-	char ticket[20];
+	int ticket;
 	int id;
+	char role[50];
 } client;
