@@ -43,19 +43,17 @@ void* hello(void *arg) {
     int i = ((thread_arg*)arg)->i;
 
 	char buff[256];
+	char p[1000];
 	FILE *bus_ascii = fopen("bus", "r");
 	if(bus_ascii == NULL) {
 		printf("not found the bus:(\n");
 		exit(1);
 	}
 
-	char p;
-	int n = 7;
-	while( 0 <= n) {
-		fgets(buff, 255, bus_ascii);  // XXX buffer overflow
-		write(bus->all_clnts[i].connection, buff, strlen(buff));
-		n--;
+	while(fgets(buff, 256, bus_ascii)) {
+		strncat(p, buff, strlen(buff));
 	}
+	write(bus->all_clnts[i].connection, p, strlen(p));
 	fclose(bus_ascii);
 
 	write(bus->all_clnts[i].connection, "\nМАРШРУТКА № 8\n", 27);
@@ -127,10 +125,10 @@ void broadcast(marshrutka_t *bus, char* message) {
 int zavesti_marshrutku(marshrutka_t *bus) {
 
 #ifdef PRAVILNIE_ZAPCHASTI
-    //int result = 1;
     int result = 0;
+    //int result = 0;
 #else
-    int result = 0;
+    int result = 1;
 #endif
 
     memset(bus, 0, sizeof(marshrutka_t));
