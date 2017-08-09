@@ -23,7 +23,6 @@ void vypnut_passazhirov(marshrutka_t *bus) {
 }
 
 void* sit_down(void *arg) {
-
     marshrutka_t *bus = ((thread_arg*)arg)->bus;
     int i = ((thread_arg*)arg)->i;
 
@@ -38,7 +37,6 @@ void* sit_down(void *arg) {
 }
 
 void* hello(void *arg) {
-
     marshrutka_t *bus = ((thread_arg*)arg)->bus;
     int i = ((thread_arg*)arg)->i;
 
@@ -94,7 +92,7 @@ void* read_answer(void* arg) {
 	menu(sockfd);
 	char buffer[10];
 	memset(buffer, 0, 10);
-	read(sockfd, buffer, 10); //наверно здесь нужно два, а не 10
+	read(sockfd, buffer, 10); 
 	write(sockfd, "Ты написал:\n", 21);
 	write(sockfd, buffer, 10);
 	printf("%s\n", buffer);
@@ -199,7 +197,7 @@ int main(int argc, char *argv[]) {
 
 	for(int i = 0; i < avtobus_442.count_of_clnts; i++) {
         ta.i = avtobus_442.all_clnts[i].connection;
-		pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &read_answer, &ta);
+		pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &read_answer, &ta); //СЕМЕН, я не заню как исправить чет. тут проблемы с синхронизацией
 	}
 
 	dozhdatsya_passazhirov(&avtobus_442);
