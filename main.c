@@ -174,33 +174,39 @@ int main(int argc, char *argv[]) {
                 exit(-1);
     }
 
-    thread_arg tas[MAX_CLIENTS];
-    for(int i = 0; i < MAX_CLIENTS; i++) {
-        avtobus_442.all_clnts[i].connection = new_client(avtobus_442.dvigatel);
-        avtobus_442.all_clnts[i].ticket = 0;
-        avtobus_442.all_clnts[i].id = i;
-        tas[i].bus = &avtobus_442;
-        tas[i].i = i;
+    while(442) {
+        avtobus_442.count_of_clnts = 0;
+        memset(avtobus_442.all_clnts, 0, sizeof(client) * MAX_CLIENTS);
+        memset(avtobus_442.seats, 0, sizeof(int) * MAX_SEATS);
 
-        pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &sit_down, tas+i);
-        pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &hello, tas+i);
+        thread_arg tas[MAX_CLIENTS];
+        for(int i = 0; i < MAX_CLIENTS; i++) {
+            avtobus_442.all_clnts[i].connection = new_client(avtobus_442.dvigatel);
+            avtobus_442.all_clnts[i].ticket = 0;
+            avtobus_442.all_clnts[i].id = i;
+            tas[i].bus = &avtobus_442;
+            tas[i].i = i;
 
-        avtobus_442.count_of_clnts++;
+            pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &sit_down, tas+i);
+            pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &hello, tas+i);
+
+            avtobus_442.count_of_clnts++;
+        }
+
+        dozhdatsya_passazhirov(&avtobus_442);
+
+        seat_layout(&avtobus_442);
+
+        broadcast(&avtobus_442, "\nОтправляемся\n");
+
+        for(int i = 0; i < avtobus_442.count_of_clnts; i++) {
+            tas[i].i = avtobus_442.all_clnts[i].connection;
+            pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &read_answer, tas+i);
+        }
+
+        dozhdatsya_passazhirov(&avtobus_442);
+        vypnut_passazhirov(&avtobus_442);
     }
-
-    dozhdatsya_passazhirov(&avtobus_442);
-
-    seat_layout(&avtobus_442);
-
-    broadcast(&avtobus_442, "\nОтправляемся\n");
-
-    for(int i = 0; i < avtobus_442.count_of_clnts; i++) {
-        tas[i].i = avtobus_442.all_clnts[i].connection;
-        pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &read_answer, tas+i);
-    }
-
-    dozhdatsya_passazhirov(&avtobus_442);
-    vypnut_passazhirov(&avtobus_442);
 
     return 0;
 }
