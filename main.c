@@ -54,48 +54,97 @@ void* hello(void *arg) {
     write(bus->all_clnts[i].connection, p, strlen(p));
     fclose(bus_ascii);
 
-    write(bus->all_clnts[i].connection, "\nМАРШРУТКА № 442\n", 27);
+    write(bus->all_clnts[i].connection, "\nМАРШРУТКА № 442\n", 28);
     char msg[40];
     sprintf(msg, "Ты выбрал место: %d\n", bus->all_clnts[i].seat);
     write(bus->all_clnts[i].connection, msg, 32);
 }
 
-void seat_layout(marshrutka_t *bus) {
+int read_answer(int sockfd) {
+
+    char buffer[10];
+    memset(buffer, 0, 10);
+    read(sockfd, buffer, 10); 
+	
+	return atoi(buffer);
+}
+
+void seat_layout(marshrutka_t *bus, int sockfd) {
     int k = 0;
+	char msg[50];
+	char part2[25];
+	write(sockfd, "\nПОЗИЦИЯ ПАССАЖИРОВ:\n", 39);
     while(k < MAX_SEATS) { //тут 10 для того, чтобы красиво выводилось))) не надо исправлять
         if(k < 10) {
-            printf("  %d,%d) %d  %d       ", k, k+1, bus->seats[k], bus->seats[k+1]);
+            sprintf(msg, "  %d,%d) %d  %d       ", k, k+1, bus->seats[k], bus->seats[k+1]);
         }
         else {
-            printf("%d,%d) %d  %d       ", k, k+1, bus->seats[k], bus->seats[k+1]);
+            sprintf(msg, "%d,%d) %d  %d       ", k, k+1, bus->seats[k], bus->seats[k+1]);
         }
-        k+=2;
+		k+=2;
         if(k < 10) {
-            printf("  %d,%d) %d  %d\n", k, k+1, bus->seats[k], bus->seats[k+1]);
+            sprintf(part2, "  %d,%d) %d  %d\n", k, k+1, bus->seats[k], bus->seats[k+1]);
+			strncat(msg, part2, strlen(part2));
         }
         else {
-            printf("%d,%d) %d  %d\n", k, k+1, bus->seats[k], bus->seats[k+1]);
+            sprintf(part2, "%d,%d) %d  %d\n", k, k+1, bus->seats[k], bus->seats[k+1]);
+			strncat(msg, part2, strlen(part2));
         }
+		write(sockfd, msg, strlen(msg));
         k+=2;
     }
 }
 
-void menu(int sockfd) {
-    write(sockfd, "1. Чатик\n2. Заплатить за проезд\n3. Пересесть\n4. Выйти на следующей остановке\n", 133);
+void take_seat(marshrutka_t *bus, int i) {
+	
+	int sockfd = bus->all_clnts[i].connection;	
+
+	seat_layout(bus, sockfd);
+	char msg[100];
+	int client_seat = bus->all_clnts[i].seat;
+	sprintf(msg, "ты сидишь на %d, куда ты хочешь пересесть?\n", client_seat);
+	write(sockfd, msg, strlen(msg));
+	int answer = read_answer(sockfd);
+	if(0 < answer && answer < MAX_SEATS) {
+		pthread_mutex_lock(&bus->mutex_seat);
+		
+		if(bus->seats[answer]) {
+			write(sockfd, "занято\n", 17);
+		}
+		else {
+			bus->seats[answer] = 1;
+			bus->seats[client_seat] = 0;
+		}
+		pthread_mutex_unlock(&bus->mutex_seat);
+		seat_layout(bus,sockfd);
+	}
+	else  
+		write(sockfd, "нет\n", 7);
+
 }
 
-void* read_answer(void* arg) {
+void* menu(void* arg) {
 
-    marshrutka_t *bus = ((thread_arg*)arg)->bus;
-    int sockfd = ((thread_arg*)arg)->i;
+	marshrutka_t *bus = ((thread_arg*)arg)->bus;
+	int k = ((thread_arg*)arg)->i;
+	int sockfd = bus->all_clnts[k].connection;
 
-    menu(sockfd);
-    char buffer[10];
-    memset(buffer, 0, 10);
-    read(sockfd, buffer, 10); 
-    write(sockfd, "Ты написал:\n", 21);
-    write(sockfd, buffer, 10);
-    printf("%s\n", buffer);
+    write(sockfd, "1. Чатик\n2. Заплатить за проезд\n3. Пересесть\n4. Выйти на следующей остановке\n", 133);
+	int answer = read_answer(sockfd);
+
+	switch(answer){
+		case 1:
+			break;
+		case 2:
+			break;
+		case 3:
+			take_seat(bus, k);
+			break;
+		case 4: 
+			break;
+		default:
+			write(sockfd, "Ты несешь какаю-то дичь\n", 43);
+	}
 }
 
 int new_client(int dvigatel) {
@@ -124,7 +173,6 @@ int zavesti_marshrutku(marshrutka_t *bus) {
 
 #ifdef PRAVILNIE_ZAPCHASTI
     int result = 0;
-    //int result = 0;
 #else
     int result = 1;
 #endif
@@ -195,13 +243,11 @@ int main(int argc, char *argv[]) {
 
         dozhdatsya_passazhirov(&avtobus_442);
 
-        seat_layout(&avtobus_442);
-
         broadcast(&avtobus_442, "\nОтправляемся\n");
 
         for(int i = 0; i < avtobus_442.count_of_clnts; i++) {
-            tas[i].i = avtobus_442.all_clnts[i].connection;
-            pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &read_answer, tas+i);
+            tas[i].i = i;
+            pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &menu, tas+i);
         }
 
         dozhdatsya_passazhirov(&avtobus_442);
