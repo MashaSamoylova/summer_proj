@@ -54,7 +54,7 @@ void* hello(void *arg) {
     write(bus->all_clnts[i].connection, p, strlen(p));
     fclose(bus_ascii);
 
-    write(bus->all_clnts[i].connection, "\nМАРШРУТКА № 8\n", 27);
+    write(bus->all_clnts[i].connection, "\nМАРШРУТКА № 442\n", 27);
     char msg[40];
     sprintf(msg, "Ты выбрал место: %d\n", bus->all_clnts[i].seat);
     write(bus->all_clnts[i].connection, msg, 32);
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
 
     for(int i = 0; i < avtobus_442.count_of_clnts; i++) {
         tas[i].i = avtobus_442.all_clnts[i].connection;
-        pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &read_answer, tas+i); //СЕМЕН, я не заню как исправить чет. тут проблемы с синхронизацией
+        pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &read_answer, tas+i);
     }
 
     dozhdatsya_passazhirov(&avtobus_442);
