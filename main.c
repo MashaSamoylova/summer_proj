@@ -62,15 +62,15 @@ void* hello(void *arg) {
 
 void seat_layout(marshrutka_t *bus) {
     int k = 0;
-    while(k < MAX_SEATS) {
-        if(k < MAX_CLIENTS) {
+    while(k < MAX_SEATS) { //тут 10 для того, чтобы красиво выводилось))) не надо исправлять
+        if(k < 10) {
             printf("  %d,%d) %d  %d       ", k, k+1, bus->seats[k], bus->seats[k+1]);
         }
         else {
             printf("%d,%d) %d  %d       ", k, k+1, bus->seats[k], bus->seats[k+1]);
         }
         k+=2;
-        if(k < MAX_CLIENTS) {
+        if(k < 10) {
             printf("  %d,%d) %d  %d\n", k, k+1, bus->seats[k], bus->seats[k+1]);
         }
         else {
