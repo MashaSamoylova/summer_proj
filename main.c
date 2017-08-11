@@ -38,7 +38,7 @@ void* declare_stop(void* arg) {
 		broadcast(bus, bus->stops[i]);
 		sleep(10);
 	}
-	
+    return NULL;	
 }
 
 void* sit_down(void *arg) {
@@ -53,7 +53,10 @@ void* sit_down(void *arg) {
     bus->seats[st] = 1;
     bus->all_clnts[i].seat = st;
     pthread_mutex_unlock(&bus->mutex_seat);
+    return NULL;	
 }
+
+
 
 void* hello(void *arg) {
     marshrutka_t *bus = ((thread_arg*)arg)->bus;
@@ -73,10 +76,17 @@ void* hello(void *arg) {
     write(bus->all_clnts[i].connection, p, strlen(p));
     fclose(bus_ascii);
 
-    write(bus->all_clnts[i].connection, "\nМАРШРУТКА № 442\n", 28);
-    char msg[40];
+    char msg[40] = "\nМАРШРУТКА № 442\n";
+    write(bus->all_clnts[i].connection, msg, strlen(msg));
     sprintf(msg, "Ты выбрал место: %d\n", bus->all_clnts[i].seat);
-    write(bus->all_clnts[i].connection, msg, 32);
+    write(bus->all_clnts[i].connection, msg, strlen(msg));
+    return NULL;	
+}
+
+void* spawn_passazhir(void *arg) {
+    hello(arg);
+    sit_down(arg);
+    return NULL;
 }
 
 int read_answer(int sockfd) {
@@ -165,6 +175,7 @@ void* menu(void* arg) {
 				write(sockfd, "Ты несешь какаю-то дичь\n", 43);
 		}
 	}
+    return NULL;	
 }
 
 int new_client(int dvigatel) {
@@ -200,97 +211,98 @@ int init_stops(char* name, marshrutka_t *bus) {
 	return i;
 }
 
-int zavesti_marshrutku(marshrutka_t *bus) {
+int zavesti_marshrutku() {
 
-#ifdef PRAVILNIE_ZAPCHASTI
-    int result = 0;
-#else
-    int result = 1;
+    /*
+#ifndef PRAVILNIE_ZAPCHASTI
+    return 0;
 #endif
+*/
 
-    memset(bus, 0, sizeof(marshrutka_t));
-    pthread_mutex_init(&bus->mutex_seat, NULL);
+    struct sockaddr_in server;
+    int dvigatel = socket(AF_INET, SOCK_STREAM, 0);
 
-	if ((bus->count_of_stps = init_stops("442_route", bus)) == -1) { //:D
-		result = 0;
-		goto errout;		
-	};
-
-    socklen_t client_ss;
-    
-    struct sockaddr_in server, cli_addr;
-    bus->dvigatel = socket(AF_INET, SOCK_STREAM, 0);
-
-    if (bus->dvigatel == -1) {
+    if (dvigatel == -1) {
         fprintf(stderr, "Could not create socket\n");
-        result = 0;
-        goto errout;
+        return 0; 
     }
 
     int yes = 1;
-    setsockopt(bus->dvigatel, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+    setsockopt(dvigatel, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
     server.sin_port = htons(PORT);
 
-    if (bind(bus->dvigatel, (struct sockaddr *) &server, sizeof(server)) < 0) {
+    if (bind(dvigatel, (struct sockaddr *) &server, sizeof(server)) < 0) {
         fprintf(stderr, "ERROR on binding\n");
-        result = 0;
-        goto errout;
+        return 0;
     }
-
-errout:
-    if ( &bus->mutex_seat)
-        pthread_mutex_destroy(&bus->mutex_seat);
-
-    return result;
+    return dvigatel;
 }
 
-int main(int argc, char *argv[]) {
+void* otpravit_marshrutku(void* arg) {
 
-    marshrutka_t avtobus_442;
-    while (!zavesti_marshrutku(&avtobus_442)) {
+    int dvigatel = ((thread_arg*)arg)->i;
+	marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
+    pthread_mutex_init(&avtobus_442->mutex_seat, NULL);
+
+	if ((avtobus_442->count_of_stps = init_stops("442_route", avtobus_442)) == -1) { //:D
+	};
+
+	avtobus_442->dvigatel = dvigatel;
+
+    thread_arg* tas = malloc( MAX_CLIENTS*sizeof(thread_arg) );
+
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        avtobus_442->all_clnts[i].connection = new_client(avtobus_442->dvigatel);
+        avtobus_442->all_clnts[i].ticket = 0;
+        avtobus_442->all_clnts[i].id = i;
+        tas[i].bus = avtobus_442;
+        tas[i].i = i;
+
+        pthread_create( &(avtobus_442->id_of_threads[avtobus_442->all_clnts[i].id]), NULL, &spawn_passazhir, tas+i);
+
+        avtobus_442->count_of_clnts++;
+    }
+
+    dozhdatsya_passazhirov(avtobus_442);
+
+    broadcast(avtobus_442, "\nОтправляемся\n");
+
+    pthread_t ostanovka;
+    pthread_create(&ostanovka, NULL, &declare_stop, tas);
+
+    for(int i = 0; i < avtobus_442->count_of_clnts; i++) {
+        tas[i].i = i;
+        pthread_create( &(avtobus_442->id_of_threads[avtobus_442->all_clnts[i].id]), NULL, &menu, tas+i);
+    }
+
+//    if ( &bus->mutex_seat)
+ //       pthread_mutex_destroy(&bus->mutex_seat);
+    
+    dozhdatsya_passazhirov(avtobus_442);//FIXME  потоок переиспользуется, убрать куда-нибудь
+    vypnut_passazhirov(avtobus_442);
+    return NULL;	
+}
+int main() {
+    int dvigatel;
+    while (!(dvigatel = zavesti_marshrutku())) {
         char nuegonahuy;
         puts("Тыр-тыр-тыр-тыр... Не завелась! Может быть, ну его?..");
+        //system("spd-say -r -50 -l ru \"Тыр-тыр-тыр-тыр... Не завелась! Может быть, ну его?..\"");
         while ((nuegonahuy=getchar()) != '\n')
             if (nuegonahuy == 'y')
                 exit(-1);
     }
 
+    pthread_t id;
+    thread_arg ta;
+    ta.i = dvigatel;
     while(442) {
-        avtobus_442.count_of_clnts = 0;
-        memset(avtobus_442.all_clnts, 0, sizeof(client) * MAX_CLIENTS);
-        memset(avtobus_442.seats, 0, sizeof(int) * MAX_SEATS);
-
-        thread_arg tas[MAX_CLIENTS];
-        for(int i = 0; i < MAX_CLIENTS; i++) {
-            avtobus_442.all_clnts[i].connection = new_client(avtobus_442.dvigatel);
-            avtobus_442.all_clnts[i].ticket = 0;
-            avtobus_442.all_clnts[i].id = i;
-            tas[i].bus = &avtobus_442;
-            tas[i].i = i;
-
-            pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &sit_down, tas+i);
-            pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &hello, tas+i);
-
-            avtobus_442.count_of_clnts++;
-        }
-
-        dozhdatsya_passazhirov(&avtobus_442);
-
-        broadcast(&avtobus_442, "\nОтправляемся\n");
-
-		pthread_t ostanovka;
-		pthread_create(&ostanovka, NULL, &declare_stop, tas);
-
-        for(int i = 0; i < avtobus_442.count_of_clnts; i++) {
-            tas[i].i = i;
-            pthread_create( &(avtobus_442.id_of_threads[avtobus_442.all_clnts[i].id]), NULL, &menu, tas+i);
-        }
-
-        dozhdatsya_passazhirov(&avtobus_442);
-        vypnut_passazhirov(&avtobus_442);
+        
+        pthread_create(&id, NULL, &otpravit_marshrutku, &ta);
+        pthread_join(id, NULL);
     }
 
     return 0;
