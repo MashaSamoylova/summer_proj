@@ -116,7 +116,6 @@ void take_seat(marshrutka_t *bus, int i) {
 			bus->seats[client_seat] = 0;
 		}
 		pthread_mutex_unlock(&bus->mutex_seat);
-		seat_layout(bus,sockfd);
 	}
 	else  
 		write(sockfd, "нет\n", 7);
@@ -125,25 +124,27 @@ void take_seat(marshrutka_t *bus, int i) {
 
 void* menu(void* arg) {
 
-	marshrutka_t *bus = ((thread_arg*)arg)->bus;
-	int k = ((thread_arg*)arg)->i;
-	int sockfd = bus->all_clnts[k].connection;
+	while(442) {
+		marshrutka_t *bus = ((thread_arg*)arg)->bus;
+		int k = ((thread_arg*)arg)->i;
+		int sockfd = bus->all_clnts[k].connection;
 
-    write(sockfd, "1. Чатик\n2. Заплатить за проезд\n3. Пересесть\n4. Выйти на следующей остановке\n", 133);
-	int answer = read_answer(sockfd);
+		write(sockfd, "1. Чатик\n2. Заплатить за проезд\n3. Пересесть\n4. Выйти на следующей остановке\n", 133);
+		int answer = read_answer(sockfd);
 
-	switch(answer){
-		case 1:
-			break;
-		case 2:
-			break;
-		case 3:
-			take_seat(bus, k);
-			break;
-		case 4: 
-			break;
-		default:
-			write(sockfd, "Ты несешь какаю-то дичь\n", 43);
+		switch(answer){
+			case 1:
+				break;
+			case 2:
+				break;
+			case 3:
+				take_seat(bus, k);
+				break;
+			case 4: 
+				break;
+			default:
+				write(sockfd, "Ты несешь какаю-то дичь\n", 43);
+		}
 	}
 }
 
