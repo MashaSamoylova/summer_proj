@@ -3,10 +3,12 @@
 
 #define _CONFIG
 
-#define MAX_CLIENTS 3
-#define MAX_SEATS   27
-#define MAX_THREADS 3
+#define MAX_CLIENTS 2
+#define MAX_SEATS   2
+#define MAX_THREADS 2
 #define MAX_ROLES   50
+#define MAX_STOPS   10
+#define MAX_LENGTH  100 //длни названия остановки
 #define PORT        1234
 
 #endif

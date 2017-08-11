@@ -22,6 +22,17 @@ void vypnut_passazhirov(marshrutka_t *bus) {
     }
 }
 
+void broadcast(marshrutka_t *bus, char* message) {
+    int i;
+    for(i = 0; i < bus->count_of_clnts; i++) {
+        write(bus->all_clnts[i].connection, message, strlen(message));
+    }
+}
+
+void* declare_stop(void* arg) {
+	
+}
+
 void* sit_down(void *arg) {
     marshrutka_t *bus = ((thread_arg*)arg)->bus;
     int i = ((thread_arg*)arg)->i;
@@ -163,11 +174,22 @@ int new_client(int dvigatel) {
     return newsockfd;
 }
 
-void broadcast(marshrutka_t *bus, char* message) {
-    int i;
-    for(i = 0; i < bus->count_of_clnts; i++) {
-        write(bus->all_clnts[i].connection, message, strlen(message));
+int init_stops(char* name, marshrutka_t *bus) {
+    FILE *route= fopen(name, "r");
+    if(route == NULL) {
+		fprintf(stderr, "Could not open the route");
+		return -1;
+        
     }
+
+	char buff[MAX_LENGTH];
+	
+	int i;
+    for(i = 0; i < MAX_STOPS &&  fgets(buff, 256, route); i++) {
+		strcpy(bus->stops[i], buff);
+    }
+
+	return i;
 }
 
 int zavesti_marshrutku(marshrutka_t *bus) {
@@ -180,6 +202,11 @@ int zavesti_marshrutku(marshrutka_t *bus) {
 
     memset(bus, 0, sizeof(marshrutka_t));
     pthread_mutex_init(&bus->mutex_seat, NULL);
+
+	if (init_stops("442_route", bus) == -1) {
+		result = 0;
+		goto errout;		
+	};
 
     socklen_t client_ss;
     
