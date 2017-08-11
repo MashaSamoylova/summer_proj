@@ -30,6 +30,14 @@ void broadcast(marshrutka_t *bus, char* message) {
 }
 
 void* declare_stop(void* arg) {
+	marshrutka_t *bus = ((thread_arg*)arg)->bus;
+
+	int n = bus->count_of_stps;
+
+	for(int i = 0; i < n; i++) {
+		broadcast(bus, bus->stops[i]);
+		sleep(10);
+	}
 	
 }
 
@@ -203,7 +211,7 @@ int zavesti_marshrutku(marshrutka_t *bus) {
     memset(bus, 0, sizeof(marshrutka_t));
     pthread_mutex_init(&bus->mutex_seat, NULL);
 
-	if (init_stops("442_route", bus) == -1) {
+	if ((bus->count_of_stps = init_stops("442_route", bus)) == -1) { //:D
 		result = 0;
 		goto errout;		
 	};
@@ -272,6 +280,9 @@ int main(int argc, char *argv[]) {
         dozhdatsya_passazhirov(&avtobus_442);
 
         broadcast(&avtobus_442, "\nОтправляемся\n");
+
+		pthread_t ostanovka;
+		pthread_create(&ostanovka, NULL, &declare_stop, tas);
 
         for(int i = 0; i < avtobus_442.count_of_clnts; i++) {
             tas[i].i = i;

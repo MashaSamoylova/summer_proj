@@ -14,6 +14,7 @@ typedef struct {
     int seats[MAX_SEATS];
     int dvigatel;
 	char stops[MAX_STOPS][MAX_LENGTH];
+	int count_of_stps;
     pthread_t id_of_threads[MAX_THREADS];
     pthread_mutex_t mutex_seat;
 } marshrutka_t;
