@@ -41,10 +41,7 @@ void* declare_stop(void* arg) {
     return NULL;	
 }
 
-void* sit_down(void *arg) {
-    marshrutka_t *bus = ((thread_arg*)arg)->bus;
-    int i = ((thread_arg*)arg)->i;
-
+void* sit_down(marshrutka_t *bus, int i) {
     int st;
     pthread_mutex_lock(&bus->mutex_seat);
     do {
@@ -58,10 +55,7 @@ void* sit_down(void *arg) {
 
 
 
-void* hello(void *arg) {
-    marshrutka_t *bus = ((thread_arg*)arg)->bus;
-    int i = ((thread_arg*)arg)->i;
-
+void* hello(marshrutka_t *bus, int i) {
     char buff[256];
     char p[1000];
     FILE *bus_ascii = fopen("bus", "r");
@@ -84,8 +78,12 @@ void* hello(void *arg) {
 }
 
 void* spawn_passazhir(void *arg) {
-    hello(arg);
-    sit_down(arg);
+    marshrutka_t *bus = ((thread_arg*)arg)->bus;
+    int i = ((thread_arg*)arg)->i;
+
+    hello(bus, i);
+    sit_down(bus, i);
+
     return NULL;
 }
 
@@ -279,12 +277,13 @@ void* otpravit_marshrutku(void* arg) {
     }
 
 //    if ( &bus->mutex_seat)
- //       pthread_mutex_destroy(&bus->mutex_seat);
+//        pthread_mutex_destroy(&bus->mutex_seat);
     
     dozhdatsya_passazhirov(avtobus_442);//FIXME  потоок переиспользуется, убрать куда-нибудь
     vypnut_passazhirov(avtobus_442);
     return NULL;	
 }
+
 int main() {
     int dvigatel;
     while (!(dvigatel = zavesti_marshrutku())) {
