@@ -64,6 +64,30 @@ void* spawn_passazhir(void *arg) {
     return NULL;
 }
 
+void add_event(client* Ivan, struct event* sc) {
+    
+    if(Ivan->last_event == NULL) { //queue is empty
+        Ivan->first_event = sc;
+        Ivan->last_event = sc;
+        return;
+    }
+
+    Ivan->last_event->next_event = sc;
+    Ivan->last_event = sc;
+}
+
+void generate_event(client* Ivan, int code, int ask_id) {
+    struct event* sc = calloc(1, sizeof(struct event));
+    
+    sc->code = code;
+    sc->ask_id = ask_id;
+    sc->handler = NULL;
+    sc->next_event = NULL;
+
+    add_event(Ivan, sc);
+
+}
+
 void next_client(
         marshrutka_t* bus,
         ucontext_t* next_context, 
@@ -178,6 +202,8 @@ void init_marshrutka(marshrutka_t* bus) {
         bus->all_clnts[i].connection = new_client(bus->dvigatel);
         bus->all_clnts[i].ticket = 0;
         bus->all_clnts[i].id = i;
+        bus->all_clnts[i].first_event = NULL;
+        bus->all_clnts[i].last_event = NULL;
         tas[i].bus = bus;
         tas[i].i = i;
 

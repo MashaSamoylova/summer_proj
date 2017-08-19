@@ -1,10 +1,11 @@
 #include "config.h"
 
-typedef struct {
+struct event{
     int code;//code of event, e.g. 1 - babka prosit opustit' okno
     int (*handler)(int, int);
-    int asc_id;
-} event;
+    int ask_id;
+    struct event* next_event;
+};
 
 typedef struct {
 	int connection;
@@ -12,8 +13,10 @@ typedef struct {
 	int ticket;
 	int id;
 	char role[MAX_ROLES];
-    event quene[MAX_QUEUE];
+    struct event* first_event;
+    struct event* last_event;
 } client;
+
 
 typedef struct {
     client all_clnts[MAX_CLIENTS];
