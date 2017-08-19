@@ -64,9 +64,43 @@ void* spawn_passazhir(void *arg) {
     return NULL;
 }
 
+
+int empty(client* Ivan) {
+    
+    if(Ivan->last_event == NULL) {
+        return 1;
+    }
+    return 0;
+}
+
+void delete_event(client* Ivan) {
+    struct event* cup = Ivan->first_event;
+    Ivan->first_event = Ivan->first_event->next_event;
+    free(cup);
+
+}
+
+void handling(client* Ivan) {
+    while( !empty(Ivan) ) {
+        int code = Ivan->first_event->code;
+        printf("id %d\n", Ivan->id);
+        switch(code) {
+            case 1:
+                printf("event 1\n");
+                break;
+            case 2:
+                printf("event 2\n");
+                break;
+            default:
+                break;
+        }
+        delete_event(Ivan);
+    }
+}
+
 void add_event(client* Ivan, struct event* sc) {
     
-    if(Ivan->last_event == NULL) { //queue is empty
+    if( !empty(Ivan) ) { //queue is empty
         Ivan->first_event = sc;
         Ivan->last_event = sc;
         return;
@@ -81,11 +115,9 @@ void generate_event(client* Ivan, int code, int ask_id) {
     
     sc->code = code;
     sc->ask_id = ask_id;
-    sc->handler = NULL;
     sc->next_event = NULL;
 
     add_event(Ivan, sc);
-
 }
 
 void next_client(

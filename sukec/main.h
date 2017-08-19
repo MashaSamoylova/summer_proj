@@ -2,7 +2,6 @@
 
 struct event{
     int code;//code of event, e.g. 1 - babka prosit opustit' okno
-    int (*handler)(int, int);
     int ask_id;
     struct event* next_event;
 };

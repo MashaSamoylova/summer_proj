@@ -9,7 +9,6 @@
 #define MAX_ROLES   50
 #define MAX_STOPS   10
 #define MAX_LENGTH  100 //длни названия остановки
-#define MAX_QUEUE   10
 #define PORT        1234
 
 #endif
