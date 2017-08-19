@@ -1,11 +1,18 @@
 #include "config.h"
 
 typedef struct {
+    int code;//code of event, e.g. 1 - babka prosit opustit' okno
+    int (*handler)(int, int);
+    int asc_id;
+} event;
+
+typedef struct {
 	int connection;
 	int seat;
 	int ticket;
 	int id;
 	char role[MAX_ROLES];
+    event quene[MAX_QUEUE];
 } client;
 
 typedef struct {
@@ -21,3 +28,4 @@ typedef struct {
     marshrutka_t *bus;
     int i;
 } thread_arg;
+

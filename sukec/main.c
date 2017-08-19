@@ -13,7 +13,6 @@
 #include <ucontext.h>
 
 void broadcast(marshrutka_t *bus, char* message) {
-
     int i;
     for(i = 0; i < bus->count_of_clnts; i++) {
         write(bus->all_clnts[i].connection, message, strlen(message));
@@ -65,79 +64,53 @@ void* spawn_passazhir(void *arg) {
     return NULL;
 }
 
-/*flag - 1 ответ от пользователя считан
- * flag - 0 иначе*/
-void read_answer(
+void next_client(
         marshrutka_t* bus,
-        ucontext_t *read_context, 
-        ucontext_t *other_context, 
-        int *flag) 
-{
+        ucontext_t* next_context, 
+        ucontext_t* other_context,
+        client* current_client) {
     
-    char buffer[10];
-    memset(buffer, 0, 10);
-    
-    struct timeval tv;
-
-    tv.tv_sec = 5;
-    tv.tv_usec = 0;
-
     int i = 0;
-    fd_set rfds;
     int count = bus->count_of_clnts;
-    int sockfd;
-    
-    while(1) {
-        sockfd = bus->all_clnts[i].connection;
-        FD_ZERO(&rfds);
-        FD_SET(sockfd, &rfds);
-        *flag = 0;
-        
-        /*FIXME здесь почему-то не по пять секунд ждет,
-         * после того как один из пользователей отключился
-         * начинаются проблемы*/
-        
-        int result = select(sockfd + 1, &rfds, NULL, NULL, &tv);
-        
-        if(FD_ISSET(sockfd, &rfds)) {
-            *flag = 1;
-            int n = read(sockfd, buffer, 10);
-            buffer[n] = 0;
-            printf("%d : %s", i, buffer);
-        }
 
+    while(1){
+        *current_client = bus->all_clnts[i];
+        printf("check123 %d\n", current_client->id);
         i = (i + 1) % count;
-        swapcontext(read_context, other_context);
+        printf("suka1\n");
+        swapcontext(next_context, other_context);
     }
 }
 
-int passanger(marshrutka_t* bus) {
-    ucontext_t main_context1, main_context2, read_context;
-    volatile int flag;
-    
+int toggle(marshrutka_t* bus) {
+    ucontext_t toggle_context1, toggle_context2, next_context;
+
     char stack[SIGSTKSZ];
 
-    getcontext(&read_context);
+    getcontext(&next_context);
 
-    read_context.uc_link = &main_context1;
-    read_context.uc_stack.ss_sp = stack;
-    read_context.uc_stack.ss_size = sizeof(stack);
+    next_context.uc_link = &toggle_context1;
+    next_context.uc_stack.ss_sp = stack;
+    next_context.uc_stack.ss_size = sizeof(stack);
 
-    makecontext(&read_context, (void (*)(void))read_answer, 
-            4, bus, &read_context, &main_context2, &flag);
-
-
-    getcontext(&main_context1);
+    volatile client current_client;
+    makecontext(&next_context, (void (*)(void))next_client,
+            4, bus, &next_context, &toggle_context2, &current_client);
 
 
-    while (1) {
-        swapcontext(&main_context2, &read_context);
-        if(flag) {
-            /*здесь обработка того, что написал*/
-            printf("**********************\n");
-        }
+    getcontext(&toggle_context1);
+
+    int i = 0;
+    for(int k = 0; k < bus->count_of_clnts; ++k) {
+        printf("check %d\n", bus->all_clnts[k].id);
     }
-    return 0;
+    while(1) {
+        swapcontext(&toggle_context2, &next_context);
+        printf("iteration № %d, client id %d\n", i, current_client.id);
+        i += 1;
+        sleep(1);
+        
+    }
 }
 
 int new_client(int dvigatel) {
@@ -190,7 +163,7 @@ int zavesti_marshrutku() {
 void* otpravit_marshrutku(void* arg) {	
 	marshrutka_t *bus = ((thread_arg*)arg)->bus;
     broadcast(bus, "\nотправляемся\n"); 
-    passanger(bus);
+    toggle(bus);
 	return NULL;
 }
 
@@ -212,10 +185,12 @@ void init_marshrutka(marshrutka_t* bus) {
 
         bus->count_of_clnts++;
     }
+
     return;	
 }
 
 int main() {
+    printf("suka\n");
     int dvigatel;
     while (!(dvigatel = zavesti_marshrutku())) {
         char nuegonahuy;
