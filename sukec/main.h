@@ -6,19 +6,19 @@ struct event{
     struct event* next_event;
 };
 
-typedef struct {
+struct client {
 	int connection;
 	int seat;
 	int ticket;
 	int id;
 	char role[MAX_ROLES];
     struct event* first_event;
-    struct event* last_event;
-} client;
+    struct client* next_client;
+};
 
 
 typedef struct {
-    client all_clnts[MAX_CLIENTS];
+    struct client all_clnts[MAX_CLIENTS];
     int count_of_clnts;
     int seats[MAX_SEATS];
     int dvigatel;
