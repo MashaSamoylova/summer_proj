@@ -12,23 +12,44 @@
 #include "config.h"
 #include <ucontext.h>
 
-void broadcast(marshrutka_t *bus, char* message) {
-    int i;
-    for(i = 0; i < bus->count_of_clnts; i++) {
-        write(bus->all_clnts[i].connection, message, strlen(message));
-    }
+void scrabwoman(marshrutka_t* bus) {
+    free(bus);
 }
 
-void sit_down(marshrutka_t *bus, int i) {
+void vypnut_passazhirov(marshrutka_t *bus) {
+    struct client* arrow = bus->first_client;
+    struct client* cup;
+    do {
+        close(arrow->connection);
+        cup = arrow;
+        arrow = arrow->next_client;
+        free(cup);
+    } while(arrow);
+}
+
+
+void broadcast(marshrutka_t *bus, char* message) {
+    struct client* arrow = bus->first_client;
+    printf("%d\n", bus->first_client->id);
+
+    do {
+        write(arrow->connection, message, strlen(message));
+        printf("lol\n");
+        arrow = arrow->next_client;
+    } while(arrow);
+}
+
+void sit_down(marshrutka_t *bus, struct client* qw) {
     int st;
     do {
         st = rand() % MAX_SEATS;
     }while(bus->seats[st]); 
+    
     bus->seats[st] = 1;
-    bus->all_clnts[i].seat = st;
+    qw->seat = st;
 }
 
-void* hello(marshrutka_t *bus, int i) {
+void hello(struct client* qw) {
     char buff[256];
     char p[1000];
 	*p = 0;
@@ -41,29 +62,30 @@ void* hello(marshrutka_t *bus, int i) {
     while(fgets(buff, 256, bus_ascii)) {
         strncat(p, buff, strlen(buff));
     }
-    write(bus->all_clnts[i].connection, p, strlen(p));
+    write(qw->connection, p, strlen(p));
     fclose(bus_ascii);
 
     char msg[40] = "\nМАРШРУТКА № 442\n";
-    write(bus->all_clnts[i].connection, msg, strlen(msg));
-    return NULL;	
+    write(qw->connection, msg, strlen(msg));
+    return;	
 }
 
 /*приветсвие и посадка*/
-void* spawn_passazhir(void *arg) {
-    marshrutka_t *bus = ((thread_arg*)arg)->bus;
-    int i = ((thread_arg*)arg)->i;
+void spawn_passazhir(marshrutka_t* bus, struct client* qw) {
 
-    hello(bus, i);
-    sit_down(bus, i);
+    hello(qw);
+    sit_down(bus, qw);
 
 	char msg[40];
-    sprintf(msg, "Ты выбрал место: %d\n", bus->all_clnts[i].seat);
-    write(bus->all_clnts[i].connection, msg, strlen(msg));
+    sprintf(msg, "Ты выбрал место: %d\n", qw->seat);
+    write(qw->connection, msg, strlen(msg));
 
-    return NULL;
+    return;
 }
 
+void spawn_babka(marshrutka_t* bus) {
+    
+}
 
 int empty(struct client* Ivan) {
     
@@ -204,13 +226,12 @@ int toggle(marshrutka_t* bus) {
         if(answer == 2) {
             generate_event(current_client, answer, current_client->id);
         }
-        sleep(1);
+ //       sleep(1);
         
     }
 }
 
 int new_client(int dvigatel) {
-    listen(dvigatel, 5);
 
     struct sockaddr_in cli_addr;
     int newsockfd;
@@ -252,6 +273,7 @@ int zavesti_marshrutku() {
         fprintf(stderr, "ERROR on binding\n");
         return 0;
     }
+    listen(dvigatel, 5);
     return dvigatel;
 }
 
@@ -260,28 +282,41 @@ void* otpravit_marshrutku(void* arg) {
 	marshrutka_t *bus = ((thread_arg*)arg)->bus;
     broadcast(bus, "\nотправляемся\n"); 
     toggle(bus);
+    vypnut_passazhirov(bus);
+    scrabwoman(bus);
 	return NULL;
 }
 
 
+void add_passanger(struct client* cl, marshrutka_t* bus) {
+    
+    cl->connection = new_client(bus->dvigatel);
+    cl->ticket = 0;
+    cl->id = bus->count_of_clnts;
+    cl->first_event = NULL;
+    cl->next_client = NULL;
+    spawn_passazhir(bus, cl);
+    bus->count_of_clnts++;
+}
+
 /*приветсвие и посдка происходит без корутин*/
 void init_marshrutka(marshrutka_t* bus) {
-
-    thread_arg* tas = malloc( MAX_CLIENTS*sizeof(thread_arg) );
-
     bus->count_of_clnts = 0;
-    for(int i = 0; i < MAX_CLIENTS; i++) {
-        bus->all_clnts[i].connection = new_client(bus->dvigatel);
-        bus->all_clnts[i].ticket = 0;
-        bus->all_clnts[i].id = i;
-        bus->all_clnts[i].first_event = NULL;
-        tas[i].bus = bus;
-        tas[i].i = i;
+    
+    bus->first_client = calloc(1, sizeof( struct client ));
+    add_passanger(bus->first_client, bus);
+    bus->last_client = bus->first_client;
 
-		spawn_passazhir(tas+i);
+    for(int i = 1; i < MAX_CLIENTS; i++) {
 
-        bus->count_of_clnts++;
+        bus->last_client->next_client = calloc(1, sizeof( struct client ));
+        bus->last_client = bus->last_client->next_client;
+        add_passanger(bus->last_client, bus);
     }
+
+    struct client* arrow = bus->first_client->next_client;
+    
+    spawn_babka(bus);
 
     return;	
 }
@@ -305,7 +340,7 @@ int main() {
 		avtobus_442->dvigatel = dvigatel;
 		init_marshrutka(avtobus_442);
       
-       ta.bus = avtobus_442;
+        ta.bus = avtobus_442;
 	   //FIXME next bus will not go before the last is will not come	
 	    pthread_create(&id, NULL, &otpravit_marshrutku, &ta);
   //	    pthread_join(id, NULL);

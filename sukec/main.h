@@ -11,14 +11,19 @@ struct client {
 	int seat;
 	int ticket;
 	int id;
-	char role[MAX_ROLES];
     struct event* first_event;
     struct client* next_client;
 };
 
+typedef struct{
+    struct client* skeleton;
+    int hp;
+}babka;
 
 typedef struct {
-    struct client all_clnts[MAX_CLIENTS];
+    struct client* first_client;
+    struct client* last_client;
+    struct client all_clnts[MAX_PASSAZHIR];
     int count_of_clnts;
     int seats[MAX_SEATS];
     int dvigatel;
