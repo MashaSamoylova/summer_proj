@@ -314,8 +314,6 @@ void init_marshrutka(marshrutka_t* bus) {
         add_passanger(bus->last_client, bus);
     }
 
-    struct client* arrow = bus->first_client->next_client;
-    
     spawn_babka(bus);
 
     return;	
