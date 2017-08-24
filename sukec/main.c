@@ -10,7 +10,6 @@
 #include <pthread.h>
 #include "main.h"
 #include "config.h"
-#include <ucontext.h>
 
 void scrabwoman(marshrutka_t* bus) {
     free(bus);
@@ -83,8 +82,9 @@ void spawn_passazhir(marshrutka_t* bus, struct client* qw) {
     return;
 }
 
-void spawn_babka(marshrutka_t* bus) {
-    
+void spawn_babka(struct babka* nemolodaya) {
+    nemolodaya->hp = 100;
+    nemolodaya->next_babka = NULL;
 }
 
 int empty(struct client* Ivan) {
@@ -144,92 +144,6 @@ void generate_event(struct client* Ivan, int code, int ask_id) {
     add_event(Ivan, sc);
 }
 
-void next_client(
-        marshrutka_t* bus,
-        ucontext_t* next_context, 
-        ucontext_t* other_context,
-        struct client** current_client) {
-    
-    int i = 0;
-    int count = bus->count_of_clnts;
-
-    while(1){
-        *current_client = &(bus->all_clnts[i]);
-        i = (i + 1) % count;
-        swapcontext(next_context, other_context);
-    }
-}
-
-int toggle(marshrutka_t* bus) {
-    ucontext_t toggle_context1, toggle_context2, next_context;
-
-    char stack[SIGSTKSZ];
-
-    getcontext(&next_context);
-
-    next_context.uc_link = &toggle_context1;
-    next_context.uc_stack.ss_sp = stack;
-    next_context.uc_stack.ss_size = sizeof(stack);
-
-    struct client* current_client;
-    makecontext(&next_context, (void (*)(void))next_client,
-            4, bus, &next_context, &toggle_context2, &current_client);
-
-
-    getcontext(&toggle_context1);
-
-    int i = 0;
-    int k = 0;
-    while(1) {
-        swapcontext(&toggle_context2, &next_context);
-        printf("iteration № %d, client id %d ", i, current_client->id);
-        int result = empty(current_client);
-        if(result) {
-            printf("queue is empty\n");
-        }
-        else {
-            printf("queue is not empty\n");
-            handling(current_client);
-        }
-        i += 1;
-        char buffer[10];
-        memset(buffer, 0, 10);
-        struct timeval tv;
-        fd_set rfds;
-
-    tv.tv_sec = 5;
-    tv.tv_usec = 0;
-
-
-        int sockfd = current_client->connection;
-        FD_ZERO(&rfds);
-        FD_SET(sockfd, &rfds);
-        
-        /*FIXME здесь почему-то не по пять секунд ждет,
-         * после того как один из пользователей отключился
-         * начинаются проблемы*/
-        
-        write(sockfd, "generate an event 1 or 2:\n", 26);
-        /*FIXME замени уже*/
-        select(sockfd + 1, &rfds, NULL, NULL, &tv);
-        
-        if(FD_ISSET(sockfd, &rfds)) {
-            int n = read(sockfd, buffer, 10);
-            buffer[n] = 0;
-        }
-        
-        int answer = atoi(buffer);
-       /*это просто тестик 1 - генерация соседу в очередьб 2 - себе же*/ 
-        if(answer == 1) {
-            generate_event(&(bus->all_clnts[(k+1)%2]), answer, current_client->id);
-        }
-        if(answer == 2) {
-            generate_event(current_client, answer, current_client->id);
-        }
- //       sleep(1);
-        
-    }
-}
 
 int new_client(int dvigatel) {
 
@@ -277,11 +191,9 @@ int zavesti_marshrutku() {
     return dvigatel;
 }
 
-
 void* otpravit_marshrutku(void* arg) {	
 	marshrutka_t *bus = ((thread_arg*)arg)->bus;
     broadcast(bus, "\nотправляемся\n"); 
-    toggle(bus);
     vypnut_passazhirov(bus);
     scrabwoman(bus);
 	return NULL;
@@ -301,6 +213,7 @@ void add_passanger(struct client* cl, marshrutka_t* bus) {
 
 /*приветсвие и посдка происходит без корутин*/
 void init_marshrutka(marshrutka_t* bus) {
+    /*инициализация пассажиров*/
     bus->count_of_clnts = 0;
     
     bus->first_client = calloc(1, sizeof( struct client ));
@@ -309,12 +222,21 @@ void init_marshrutka(marshrutka_t* bus) {
 
     for(int i = 1; i < MAX_CLIENTS; i++) {
 
-        bus->last_client->next_client = calloc(1, sizeof( struct client ));
+        bus->last_client->next_client = calloc( 1, sizeof(struct client) );
         bus->last_client = bus->last_client->next_client;
         add_passanger(bus->last_client, bus);
     }
 
-    spawn_babka(bus);
+    /*инициализация бабок*/
+    bus->first_babka = calloc(1, sizeof(struct babka));
+    spawn_babka(bus->first_babka);
+    bus->last_babka = bus->first_babka;
+
+    for(int i = 1; i < MAX_BABOK; i++) {
+        bus->last_babka->next_babka = calloc( 1, sizeof(struct babka) );
+        bus->last_babka = bus->last_babka->next_babka;
+        spawn_babka(bus->last_babka);
+    }
 
     return;	
 }

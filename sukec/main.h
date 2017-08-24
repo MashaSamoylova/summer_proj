@@ -1,6 +1,7 @@
 #include "config.h"
+#include <ucontext.h>
 
-struct event{
+struct event {
     int code;//code of event, e.g. 1 - babka prosit opustit' okno
     int ask_id;
     struct event* next_event;
@@ -13,12 +14,14 @@ struct client {
 	int id;
     struct event* first_event;
     struct client* next_client;
+    ucontext_t* client_context;
 };
 
-typedef struct{
+struct babka {
     struct client* skeleton;
     int hp;
-}babka;
+    struct babka* next_babka;
+};
 
 typedef struct {
     struct client* first_client;
@@ -27,8 +30,9 @@ typedef struct {
     int count_of_clnts;
     int seats[MAX_SEATS];
     int dvigatel;
-	char stops[MAX_STOPS][MAX_LENGTH];
-	int count_of_stps;
+    struct babka* first_babka;
+    struct babka* last_babka;
+    
 } marshrutka_t;
 
 typedef struct {
