@@ -31,7 +31,6 @@ void vypnut_passazhirov(marshrutka_t *bus) {
 
 void broadcast(marshrutka_t *bus, char* message) {
     struct client* arrow = bus->first_client;
-    printf("%d\n", bus->first_client->id);
 
     do {
         write(arrow->connection, message, strlen(message));
@@ -157,7 +156,7 @@ void next_client(marshrutka_t* bus) {
             swapcontext(&next_context, &arrow->context);
             printf("вернулся\n");
             arrow = arrow->next_client;
-       //     sleep(1);
+            sleep(1);
         }
 
     }
@@ -165,6 +164,7 @@ void next_client(marshrutka_t* bus) {
 
 void handler(struct client* Ivan) {
     while(1) {
+        printf("дошел до цели\n");
         printf("client id %d\n", Ivan->id);
         swapcontext(&Ivan->context, &next_context);
     }
@@ -185,6 +185,7 @@ int new_client(int dvigatel) {
 }
 
 void* otpravit_marshrutku(void* arg) {
+    getcontext(&main_context);
 	marshrutka_t *bus = ((thread_arg*)arg)->bus;
     broadcast(bus, "\nотправляемся\n"); 
     next_client(bus);
@@ -238,7 +239,7 @@ void add_passanger(struct client* cl, marshrutka_t* bus) {
 
     cl->context.uc_link = &main_context;
     cl->context.uc_stack.ss_sp = stack;
-    cl->context.uc_stack.ss_size = sizeof(stack);
+    cl->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
 
     getcontext(&cl->context);
     makecontext(&cl->context, (void (*)(void))handler,
@@ -252,7 +253,7 @@ void init_context(marshrutka_t* bus) {
 
     next_context.uc_link = &main_context;
     next_context.uc_stack.ss_sp = stack;
-    next_context.uc_stack.ss_size = sizeof(stack);
+    next_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
 
     getcontext(&next_context);
     makecontext(&next_context, (void (*)(void))next_client,
