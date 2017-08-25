@@ -14,7 +14,7 @@ struct client {
 	int id;
     struct event* first_event;
     struct client* next_client;
-    ucontext_t* client_context;
+    ucontext_t context;
 };
 
 struct babka {

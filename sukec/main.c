@@ -11,6 +11,8 @@
 #include "main.h"
 #include "config.h"
 
+ucontext_t main_context, next_context; 
+
 void scrabwoman(marshrutka_t* bus) {
     free(bus);
 }
@@ -33,7 +35,6 @@ void broadcast(marshrutka_t *bus, char* message) {
 
     do {
         write(arrow->connection, message, strlen(message));
-        printf("lol\n");
         arrow = arrow->next_client;
     } while(arrow);
 }
@@ -145,6 +146,30 @@ void generate_event(struct client* Ivan, int code, int ask_id) {
 }
 
 
+void next_client(marshrutka_t* bus) {
+
+    while(1) {
+        
+        struct client* arrow = bus->first_client;
+        
+        while(arrow) {
+            printf("прыгнул\n");
+            swapcontext(&next_context, &arrow->context);
+            printf("вернулся\n");
+            arrow = arrow->next_client;
+       //     sleep(1);
+        }
+
+    }
+}
+
+void handler(struct client* Ivan) {
+    while(1) {
+        printf("client id %d\n", Ivan->id);
+        swapcontext(&Ivan->context, &next_context);
+    }
+}
+
 int new_client(int dvigatel) {
 
     struct sockaddr_in cli_addr;
@@ -159,6 +184,14 @@ int new_client(int dvigatel) {
     return newsockfd;
 }
 
+void* otpravit_marshrutku(void* arg) {
+	marshrutka_t *bus = ((thread_arg*)arg)->bus;
+    broadcast(bus, "\nотправляемся\n"); 
+    next_client(bus);
+    vypnut_passazhirov(bus);
+    scrabwoman(bus);
+	return NULL;
+}
 
 /*возвращает сокет для всего сервиса*/
 int zavesti_marshrutku() {
@@ -191,14 +224,6 @@ int zavesti_marshrutku() {
     return dvigatel;
 }
 
-void* otpravit_marshrutku(void* arg) {	
-	marshrutka_t *bus = ((thread_arg*)arg)->bus;
-    broadcast(bus, "\nотправляемся\n"); 
-    vypnut_passazhirov(bus);
-    scrabwoman(bus);
-	return NULL;
-}
-
 
 void add_passanger(struct client* cl, marshrutka_t* bus) {
     
@@ -208,7 +233,30 @@ void add_passanger(struct client* cl, marshrutka_t* bus) {
     cl->first_event = NULL;
     cl->next_client = NULL;
     spawn_passazhir(bus, cl);
+
+    char* stack = calloc( SIGSTKSZ, sizeof(char) );
+
+    cl->context.uc_link = &main_context;
+    cl->context.uc_stack.ss_sp = stack;
+    cl->context.uc_stack.ss_size = sizeof(stack);
+
+    getcontext(&cl->context);
+    makecontext(&cl->context, (void (*)(void))handler,
+        2, cl, &next_context);
     bus->count_of_clnts++;
+}
+
+/*инициалтзация глобальных контекстов*/
+void init_context(marshrutka_t* bus) {
+    char* stack = calloc( SIGSTKSZ, sizeof(char) );
+
+    next_context.uc_link = &main_context;
+    next_context.uc_stack.ss_sp = stack;
+    next_context.uc_stack.ss_size = sizeof(stack);
+
+    getcontext(&next_context);
+    makecontext(&next_context, (void (*)(void))next_client,
+            1, bus);
 }
 
 /*приветсвие и посдка происходит без корутин*/
@@ -226,17 +274,7 @@ void init_marshrutka(marshrutka_t* bus) {
         bus->last_client = bus->last_client->next_client;
         add_passanger(bus->last_client, bus);
     }
-
-    /*инициализация бабок*/
-    bus->first_babka = calloc(1, sizeof(struct babka));
-    spawn_babka(bus->first_babka);
-    bus->last_babka = bus->first_babka;
-
-    for(int i = 1; i < MAX_BABOK; i++) {
-        bus->last_babka->next_babka = calloc( 1, sizeof(struct babka) );
-        bus->last_babka = bus->last_babka->next_babka;
-        spawn_babka(bus->last_babka);
-    }
+    init_context(bus);
 
     return;	
 }
