@@ -14,18 +14,26 @@
 ucontext_t main_context, next_context; 
 
 void scrabwoman(marshrutka_t* bus) {
+    struct client* arrow = bus->first_client;
+    struct client* cup;
+    
+    while(arrow) {
+        cup = arrow;
+        free(arrow->context.uc_stack.ss_sp);
+        arrow = arrow->next_client;
+        free(cup);
+    }
+
     free(bus);
 }
 
 void vypnut_passazhirov(marshrutka_t *bus) {
     struct client* arrow = bus->first_client;
-    struct client* cup;
-    do {
+    
+    while(arrow) {
         close(arrow->connection);
-        cup = arrow;
         arrow = arrow->next_client;
-        free(cup);
-    } while(arrow);
+    }
 }
 
 
@@ -158,7 +166,6 @@ void next_client(marshrutka_t* bus) {
             arrow = arrow->next_client;
             sleep(1);
         }
-
     }
 }
 
@@ -302,8 +309,8 @@ int main() {
         ta.bus = avtobus_442;
 	   //FIXME next bus will not go before the last is will not come	
 	    pthread_create(&id, NULL, &otpravit_marshrutku, &ta);
-  //	    pthread_join(id, NULL);
-    //    printf("ДЖОИН\n");
+  	  //  pthread_join(id, NULL);
+        //printf("ДЖОИН\n");
     }
 
     return 0;
