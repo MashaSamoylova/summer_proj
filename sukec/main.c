@@ -8,173 +8,37 @@
 #include <sys/select.h>
 #include <arpa/inet.h>
 #include <pthread.h>
-#include "main.h"
-#include "config.h"
+#include <fcntl.h>
 
-ucontext_t main_context, next_context; 
+#include "marshrutka.h"
 
-void scrabwoman(marshrutka_t* bus) {
-    struct client* arrow = bus->first_client;
-    struct client* cup;
-    
-    while(arrow) {
-        cup = arrow;
-        free(arrow->context.uc_stack.ss_sp);
-        arrow = arrow->next_client;
-        free(cup);
-    }
-
-    free(bus);
-}
-
-void vypnut_passazhirov(marshrutka_t *bus) {
-    struct client* arrow = bus->first_client;
-    
-    while(arrow) {
-        close(arrow->connection);
-        arrow = arrow->next_client;
-    }
-}
-
-
-void broadcast(marshrutka_t *bus, char* message) {
-    struct client* arrow = bus->first_client;
-
-    do {
-        write(arrow->connection, message, strlen(message));
-        arrow = arrow->next_client;
-    } while(arrow);
-}
-
-void sit_down(marshrutka_t *bus, struct client* qw) {
-    int st;
-    do {
-        st = rand() % MAX_SEATS;
-    }while(bus->seats[st]); 
-    
-    bus->seats[st] = 1;
-    qw->seat = st;
-}
-
-void hello(struct client* qw) {
-    char buff[256];
-    char p[1000];
-	*p = 0;
-    FILE *bus_ascii = fopen("bus", "r");
-    if(bus_ascii == NULL) {
-        printf("not found the bus:(\n");
-        exit(1);
-    }
-
-    while(fgets(buff, 256, bus_ascii)) {
-        strncat(p, buff, strlen(buff));
-    }
-    write(qw->connection, p, strlen(p));
-    fclose(bus_ascii);
-
-    char msg[40] = "\nМАРШРУТКА № 442\n";
-    write(qw->connection, msg, strlen(msg));
-    return;	
-}
-
-/*приветсвие и посадка*/
-void spawn_passazhir(marshrutka_t* bus, struct client* qw) {
-
-    hello(qw);
-    sit_down(bus, qw);
-
-	char msg[40];
-    sprintf(msg, "Ты выбрал место: %d\n", qw->seat);
-    write(qw->connection, msg, strlen(msg));
-
-    return;
-}
-
-void spawn_babka(struct babka* nemolodaya) {
-    nemolodaya->hp = 100;
-    nemolodaya->next_babka = NULL;
-}
-
-int empty(struct client* Ivan) {
-    
-    if(Ivan->first_event == NULL) {
-        return 1;
-    }
-    return 0;
-}
-
-void delete_event(struct client* Ivan) {
-    struct event* cup = Ivan->first_event;
-    Ivan->first_event = Ivan->first_event->next_event;
-    free(cup);
-}
-
-void handling(struct client* Ivan) {
-    while( !empty(Ivan) ) {
-        int code = Ivan->first_event->code;
-        printf("id %d\n", Ivan->id);
-        switch(code) {
-            case 1:
-                printf("event 1\n");
-                break;
-            case 2:
-                printf("event 2\n");
-                break;
-            default:
-                break;
-        }
-        delete_event(Ivan);
-        printf("event is handled\n");
-    }
-}
-
-void add_event(struct client* Ivan, struct event* sc) {
-    
-    if( empty(Ivan) ) { //queue is empty
-        Ivan->first_event = sc;
-        return;
-    }
-
-    struct event* last = Ivan->first_event;
-    while(last->next_event != NULL) {
-        last = last->next_event;
-    }
-    last = sc;
-}
-
-void generate_event(struct client* Ivan, int code, int ask_id) {
-    struct event* sc = calloc(1, sizeof(struct event));
-    
-    sc->code = code;
-    sc->ask_id = ask_id;
-    sc->next_event = NULL;
-
-    add_event(Ivan, sc);
-}
-
-
-void next_client(marshrutka_t* bus) {
-
+void baba_handler(marshrutka_t* bus, struct babka* Katya, struct client* Ivan) {
+  
     while(1) {
-        
-        struct client* arrow = bus->first_client;
-        
-        while(arrow) {
-            printf("прыгнул\n");
-            swapcontext(&next_context, &arrow->context);
-            printf("вернулся\n");
-            arrow = arrow->next_client;
-            sleep(1);
-        }
+        printf("baba id %d\n", Katya->id);
+        swapcontext(&Katya->context, &Katya->next_babka->context);
+        swapcontext(&Katya->context, &Ivan->context);
     }
 }
 
-void handler(struct client* Ivan) {
+void handler(marshrutka_t* bus, struct client* Ivan, struct babka* Katya) {
+    
     while(1) {
-        printf("дошел до цели\n");
         printf("client id %d\n", Ivan->id);
-        swapcontext(&Ivan->context, &next_context);
+        swapcontext(&Ivan->context, &Ivan->next_client->context);
+        swapcontext(&Ivan->context, &Katya->context);
+        sleep(0.3);
     }
+}
+
+void* otpravit_marshrutku(void* arg) {
+    getcontext(&main_context);
+	marshrutka_t *bus = ((thread_arg*)arg)->bus;
+    broadcast(bus, "\nотправляемся\n"); 
+    handler(bus, bus->first_client, bus->first_babka);
+    vypnut_passazhirov(bus);
+    scrabwoman(bus);
+	return NULL;
 }
 
 int new_client(int dvigatel) {
@@ -191,47 +55,38 @@ int new_client(int dvigatel) {
     return newsockfd;
 }
 
-void* otpravit_marshrutku(void* arg) {
-    getcontext(&main_context);
-	marshrutka_t *bus = ((thread_arg*)arg)->bus;
-    broadcast(bus, "\nотправляемся\n"); 
-    next_client(bus);
-    vypnut_passazhirov(bus);
-    scrabwoman(bus);
-	return NULL;
+void add_babka(struct babka* Katya, int id, marshrutka_t* bus) {
+    Katya->next_babka = NULL;
+    Katya->id = id;
+    Katya->hp = 100;
+    
+    char* stack = calloc( SIGSTKSZ, sizeof(char) );
+
+    Katya->context.uc_link = &main_context;
+    Katya->context.uc_stack.ss_sp = stack;
+    Katya->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+
+    getcontext(&Katya->context);
+    makecontext(&Katya->context, (void (*)(void))baba_handler,
+        3, bus, Katya, bus->first_client);
 }
 
-/*возвращает сокет для всего сервиса*/
-int zavesti_marshrutku() {
-    /*
-#ifndef PRAVILNIE_ZAPCHASTI
-    return 0;
-#endif
-*/
+void spawn_babki(marshrutka_t* bus, int density) {
 
-    struct sockaddr_in server;
-    int dvigatel = socket(AF_INET, SOCK_STREAM, 0);
+    bus->first_babka = calloc(1, sizeof( struct babka ));
+    add_babka(bus->first_babka, density, bus);
+    bus->last_babka = bus->first_babka;
+    density--;
 
-    if (dvigatel == -1) {
-        fprintf(stderr, "Could not create socket\n");
-        return 0; 
+    while(density) {
+        bus->last_babka->next_babka = calloc(1, sizeof(struct babka));
+        bus->last_babka = bus->last_babka->next_babka;
+        add_babka(bus->last_babka, density, bus);
+        density--;
     }
 
-    int yes = 1;
-    setsockopt(dvigatel, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(PORT);
-
-    if (bind(dvigatel, (struct sockaddr *) &server, sizeof(server)) < 0) {
-        fprintf(stderr, "ERROR on binding\n");
-        return 0;
-    }
-    listen(dvigatel, 5);
-    return dvigatel;
+    bus->last_babka->next_babka = bus->first_babka;
 }
-
 
 void add_passanger(struct client* cl, marshrutka_t* bus) {
     
@@ -240,7 +95,6 @@ void add_passanger(struct client* cl, marshrutka_t* bus) {
     cl->id = bus->count_of_clnts;
     cl->first_event = NULL;
     cl->next_client = NULL;
-    spawn_passazhir(bus, cl);
 
     char* stack = calloc( SIGSTKSZ, sizeof(char) );
 
@@ -250,25 +104,24 @@ void add_passanger(struct client* cl, marshrutka_t* bus) {
 
     getcontext(&cl->context);
     makecontext(&cl->context, (void (*)(void))handler,
-        2, cl, &next_context);
+        3, bus, cl, bus->first_babka);
+
+    char* stack1 = calloc(SIGSTKSZ, sizeof(char) );
+
+    cl->read_context.uc_link = &main_context;
+    cl->read_context.uc_stack.ss_sp = stack1;
+    cl->read_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+
+    getcontext(&cl->read_context);
+    makecontext(&cl->read_context, (void (*)(void))read_answer,
+            1, cl); 
+    
+    hello(cl);
     bus->count_of_clnts++;
 }
 
-/*инициалтзация глобальных контекстов*/
-void init_context(marshrutka_t* bus) {
-    char* stack = calloc( SIGSTKSZ, sizeof(char) );
-
-    next_context.uc_link = &main_context;
-    next_context.uc_stack.ss_sp = stack;
-    next_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
-
-    getcontext(&next_context);
-    makecontext(&next_context, (void (*)(void))next_client,
-            1, bus);
-}
-
 /*приветсвие и посдка происходит без корутин*/
-void init_marshrutka(marshrutka_t* bus) {
+void init_marshrutka(marshrutka_t* bus, int density) {
     /*инициализация пассажиров*/
     bus->count_of_clnts = 0;
     
@@ -282,13 +135,25 @@ void init_marshrutka(marshrutka_t* bus) {
         bus->last_client = bus->last_client->next_client;
         add_passanger(bus->last_client, bus);
     }
-    init_context(bus);
+    bus->last_client->next_client = bus->first_client; //пассажиры хранятся в кольце
+
+    spawn_babki(bus, density);
 
     return;	
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+     setbuf ( stdout , NULL ); 
+
+    if(argc < 2) {
+        printf("please, use ./main <density of babok>\n");
+        exit(1);
+    }
+    
+    char* p;
+    long density = strtol(argv[1], &p, 10);
     int dvigatel;
+
     while (!(dvigatel = zavesti_marshrutku())) {
         char nuegonahuy;
         puts("Тыр-тыр-тыр-тыр... Не завелась! Может быть, ну его?..");
@@ -304,7 +169,7 @@ int main() {
     while(442) {
 		marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
 		avtobus_442->dvigatel = dvigatel;
-		init_marshrutka(avtobus_442);
+		init_marshrutka(avtobus_442, (int)density);
       
         ta.bus = avtobus_442;
 	   //FIXME next bus will not go before the last is will not come	
