@@ -26,7 +26,6 @@ void handler(marshrutka_t* bus, struct client* Ivan, struct babka* Katya) {
     while(1) {
         printf("client id %d\n", Ivan->id);
         swapcontext(&Ivan->context, &Ivan->next_client->context);
-        swapcontext(&Ivan->context, &Katya->context);
         sleep(0.3);
     }
 }
@@ -88,21 +87,21 @@ void spawn_babki(marshrutka_t* bus, int density) {
     bus->last_babka->next_babka = bus->first_babka;
 }
 
-void add_passanger(struct client* cl, marshrutka_t* bus) {
+void add_passanger(struct client* Ivan, marshrutka_t* bus) {
     
-    cl->connection = new_client(bus->dvigatel);
-    cl->ticket = 0;
-    cl->id = bus->count_of_clnts;
-    cl->first_event = NULL;
-    cl->next_client = NULL;
+    Ivan->connection = new_client(bus->dvigatel);
+    Ivan->ticket = 0;
+    Ivan->id = bus->count_of_clnts;
+    Ivan->first_event = NULL;
+    Ivan->next_client = NULL;
 
-    hello(cl);
+    hello(Ivan);
     bus->count_of_clnts++;
 }
 
-void init_context(marshrutka_t* bus) {
+void init_contexts(marshrutka_t* bus) {
+    printf("инициализация контекстов\n");
     struct client* Ivan = bus->first_client;
-    
     while(Ivan) {
         Ivan->context.uc_link = &main_context;
         Ivan->context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
@@ -119,12 +118,12 @@ void init_context(marshrutka_t* bus) {
         getcontext(&Ivan->read_context);
         makecontext(&Ivan->read_context, (void (*)(void))read_answer,
                 1, Ivan); 
-
+    
         Ivan = Ivan->next_client;
     }
+    printf("инициализация контекстов окончена\n");
 
 }
-
 /*приветсвие и посдка происходит без корутин*/
 void init_marshrutka(marshrutka_t* bus, int density) {
     /*инициализация пассажиров*/
@@ -140,11 +139,9 @@ void init_marshrutka(marshrutka_t* bus, int density) {
         bus->last_client = bus->last_client->next_client;
         add_passanger(bus->last_client, bus);
     }
-    bus->last_client->next_client = bus->first_client; //пассажиры хранятся в кольце
 
     spawn_babki(bus, density);
-    init_context(bus);
-
+    init_contexts(bus);
     return;	
 }
 
