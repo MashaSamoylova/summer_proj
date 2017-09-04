@@ -98,11 +98,10 @@ void read_answer(struct client* Ivan) {
 }
 
 
-void open_window(struct client* Ivan) {
+/*void open_window(struct client* Ivan) {
     write_to_client(Ivan, "Молодой человек, откройте окно!\n\n1. открыть окно\n 2.ударить бабку\n");
     int answer = 0;
     
-    /*переклячатся на другого пользователя пока тупит этот*/
     while(!answer) {
         swapcontext(&Ivan->context, &Ivan->read_context);
         answer = atoi(Ivan->buffer);
@@ -112,7 +111,7 @@ void open_window(struct client* Ivan) {
     printf("открытие окна %d %d\n");
 
 
-}
+}*/
 
 void handling(struct client* Ivan) {
     while( !empty(Ivan) ) {

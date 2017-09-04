@@ -94,7 +94,7 @@ void add_passanger(struct client* Ivan, marshrutka_t* bus) {
     Ivan->id = bus->count_of_clnts;
     Ivan->first_event = NULL;
     Ivan->next_client = NULL;
-
+    
     hello(Ivan);
     bus->count_of_clnts++;
 }
@@ -102,7 +102,8 @@ void add_passanger(struct client* Ivan, marshrutka_t* bus) {
 void init_contexts(marshrutka_t* bus) {
     printf("инициализация контекстов\n");
     struct client* Ivan = bus->first_client;
-    while(Ivan) {
+    do {
+        printf("huy\n");
         Ivan->context.uc_link = &main_context;
         Ivan->context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
         Ivan->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
@@ -118,9 +119,9 @@ void init_contexts(marshrutka_t* bus) {
         getcontext(&Ivan->read_context);
         makecontext(&Ivan->read_context, (void (*)(void))read_answer,
                 1, Ivan); 
-    
+
         Ivan = Ivan->next_client;
-    }
+    } while(Ivan != bus->first_client);
     printf("инициализация контекстов окончена\n");
 
 }
@@ -140,6 +141,7 @@ void init_marshrutka(marshrutka_t* bus, int density) {
         add_passanger(bus->last_client, bus);
     }
 
+    bus->last_client->next_client = bus->first_client;
     spawn_babki(bus, density);
     init_contexts(bus);
     return;	
