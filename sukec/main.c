@@ -96,28 +96,33 @@ void add_passanger(struct client* cl, marshrutka_t* bus) {
     cl->first_event = NULL;
     cl->next_client = NULL;
 
-    char* stack = calloc( SIGSTKSZ, sizeof(char) );
-
-    cl->context.uc_link = &main_context;
-    cl->context.uc_stack.ss_sp = stack;
-    cl->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
-
-    getcontext(&cl->context);
-    makecontext(&cl->context, (void (*)(void))handler,
-        3, bus, cl, bus->first_babka);
-
-    char* stack1 = calloc(SIGSTKSZ, sizeof(char) );
-
-    cl->read_context.uc_link = &main_context;
-    cl->read_context.uc_stack.ss_sp = stack1;
-    cl->read_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
-
-    getcontext(&cl->read_context);
-    makecontext(&cl->read_context, (void (*)(void))read_answer,
-            1, cl); 
-    
     hello(cl);
     bus->count_of_clnts++;
+}
+
+void init_context(marshrutka_t* bus) {
+    struct client* Ivan = bus->first_client;
+    
+    while(Ivan) {
+        Ivan->context.uc_link = &main_context;
+        Ivan->context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
+        Ivan->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+
+        getcontext(&Ivan->context);
+        makecontext(&Ivan->context, (void (*)(void))handler,
+            3, bus, Ivan, bus->first_babka);
+
+        Ivan->read_context.uc_link = &main_context;
+        Ivan->read_context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
+        Ivan->read_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+
+        getcontext(&Ivan->read_context);
+        makecontext(&Ivan->read_context, (void (*)(void))read_answer,
+                1, Ivan); 
+
+        Ivan = Ivan->next_client;
+    }
+
 }
 
 /*приветсвие и посдка происходит без корутин*/
@@ -138,6 +143,7 @@ void init_marshrutka(marshrutka_t* bus, int density) {
     bus->last_client->next_client = bus->first_client; //пассажиры хранятся в кольце
 
     spawn_babki(bus, density);
+    init_context(bus);
 
     return;	
 }
