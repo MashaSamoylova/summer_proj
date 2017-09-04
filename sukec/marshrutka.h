@@ -10,7 +10,6 @@ typedef struct {
     int dvigatel;
     struct babka* first_babka;
     struct babka* last_babka;
-    
 } marshrutka_t;
 
 /*for create a thread*/

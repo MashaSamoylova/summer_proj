@@ -16,8 +16,10 @@ void baba_handler(marshrutka_t* bus, struct babka* Katya, struct client* Ivan) {
   
     while(1) {
         printf("baba id %d\n", Katya->id);
+        if(Katya->next_babka == bus->first_babka) {
+            swapcontext(&Katya->context, &Ivan->context);
+        }
         swapcontext(&Katya->context, &Katya->next_babka->context);
-        swapcontext(&Katya->context, &Ivan->context);
     }
 }
 
@@ -25,8 +27,12 @@ void handler(marshrutka_t* bus, struct client* Ivan, struct babka* Katya) {
     
     while(1) {
         printf("client id %d\n", Ivan->id);
+        if(Ivan->next_client == bus->first_client) {
+            printf("переключение на бабок\n");
+            swapcontext(&Ivan->context, &Katya->context);
+        }
         swapcontext(&Ivan->context, &Ivan->next_client->context);
-        sleep(0.3);
+        sleep(1);
     }
 }
 
@@ -59,15 +65,6 @@ void add_babka(struct babka* Katya, int id, marshrutka_t* bus) {
     Katya->id = id;
     Katya->hp = 100;
     
-    char* stack = calloc( SIGSTKSZ, sizeof(char) );
-
-    Katya->context.uc_link = &main_context;
-    Katya->context.uc_stack.ss_sp = stack;
-    Katya->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
-
-    getcontext(&Katya->context);
-    makecontext(&Katya->context, (void (*)(void))baba_handler,
-        3, bus, Katya, bus->first_client);
 }
 
 void spawn_babki(marshrutka_t* bus, int density) {
@@ -101,6 +98,7 @@ void add_passanger(struct client* Ivan, marshrutka_t* bus) {
 
 void init_contexts(marshrutka_t* bus) {
     printf("инициализация контекстов\n");
+    
     struct client* Ivan = bus->first_client;
     do {
         printf("huy\n");
@@ -122,6 +120,26 @@ void init_contexts(marshrutka_t* bus) {
 
         Ivan = Ivan->next_client;
     } while(Ivan != bus->first_client);
+
+  /*  bus->babki_context.uc_link = &main_context;
+    bus->babki_context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
+    bus->babki_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+    getcontext(&bus->babki_context);
+
+    makecontext(&bus->babki_context, (void (*)(void))baba_handler, 
+            1, bus); */
+    struct babka* Katya = bus->first_babka;
+    do {
+        Katya->context.uc_link = &main_context;
+        Katya->context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
+        Katya->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+
+        getcontext(&Katya->context);
+        makecontext(&Katya->context, (void (*)(void))baba_handler,
+            3, bus, Katya, bus->first_client);
+        Katya = Katya->next_babka;
+    } while(Katya != bus->first_babka);
+
     printf("инициализация контекстов окончена\n");
 
 }
