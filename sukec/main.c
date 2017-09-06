@@ -12,27 +12,34 @@
 
 #include "marshrutka.h"
 
-void baba_handler(marshrutka_t* bus, struct babka* Katya, struct client* Ivan) {
-  
+void gears(marshrutka_t* bus) {
+    struct client* Ivan = bus->first_client;
+    struct babka* Katya = bus->first_babka;
+
+    while(1) {
+        swapcontext(&bus->toggle, &Ivan->context);
+        swapcontext(&bus->toggle, &Katya->context);
+
+        Ivan = Ivan->next_client;
+        Katya = Katya->next_babka;
+        sleep(0.5);
+    }
+    
+}
+
+void baba_handler(marshrutka_t* bus, struct babka* Katya) {
+    
     while(1) {
         printf("baba id %d\n", Katya->id);
-        if(Katya->next_babka == bus->first_babka) {
-            swapcontext(&Katya->context, &Ivan->context);
-        }
-        swapcontext(&Katya->context, &Katya->next_babka->context);
+        swapcontext(&Katya->context, &bus->toggle);
     }
 }
 
-void handler(marshrutka_t* bus, struct client* Ivan, struct babka* Katya) {
+void handler(marshrutka_t* bus, struct client* Ivan) {
     
     while(1) {
         printf("client id %d\n", Ivan->id);
-        if(Ivan->next_client == bus->first_client) {
-            printf("переключение на бабок\n");
-            swapcontext(&Ivan->context, &Katya->context);
-        }
-        swapcontext(&Ivan->context, &Ivan->next_client->context);
-        sleep(1);
+        swapcontext(&Ivan->context, &bus->toggle);
     }
 }
 
@@ -40,7 +47,7 @@ void* otpravit_marshrutku(void* arg) {
     getcontext(&main_context);
 	marshrutka_t *bus = ((thread_arg*)arg)->bus;
     broadcast(bus, "\nотправляемся\n"); 
-    handler(bus, bus->first_client, bus->first_babka);
+    gears(bus);
     vypnut_passazhirov(bus);
     scrabwoman(bus);
 	return NULL;
@@ -60,8 +67,9 @@ int new_client(int dvigatel) {
     return newsockfd;
 }
 
-void add_babka(struct babka* Katya, int id, marshrutka_t* bus) {
+void add_babka(struct babka* Katya, int id) {
     Katya->next_babka = NULL;
+    Katya->first_event = NULL;
     Katya->id = id;
     Katya->hp = 100;
     
@@ -69,15 +77,16 @@ void add_babka(struct babka* Katya, int id, marshrutka_t* bus) {
 
 void spawn_babki(marshrutka_t* bus, int density) {
 
+    density--;
     bus->first_babka = calloc(1, sizeof( struct babka ));
-    add_babka(bus->first_babka, density, bus);
+    add_babka(bus->first_babka, density);
     bus->last_babka = bus->first_babka;
     density--;
 
-    while(density) {
+    while(density != -1) {
         bus->last_babka->next_babka = calloc(1, sizeof(struct babka));
         bus->last_babka = bus->last_babka->next_babka;
-        add_babka(bus->last_babka, density, bus);
+        add_babka(bus->last_babka, density);
         density--;
     }
 
@@ -101,14 +110,13 @@ void init_contexts(marshrutka_t* bus) {
     
     struct client* Ivan = bus->first_client;
     do {
-        printf("huy\n");
         Ivan->context.uc_link = &main_context;
-        Ivan->context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
-        Ivan->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+        Ivan->context.uc_stack.ss_sp = calloc(2*SIGSTKSZ, sizeof(char));
+        Ivan->context.uc_stack.ss_size = 2*SIGSTKSZ * sizeof(char);
 
         getcontext(&Ivan->context);
         makecontext(&Ivan->context, (void (*)(void))handler,
-            3, bus, Ivan, bus->first_babka);
+            2, bus, Ivan);
 
         Ivan->read_context.uc_link = &main_context;
         Ivan->read_context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
@@ -121,13 +129,6 @@ void init_contexts(marshrutka_t* bus) {
         Ivan = Ivan->next_client;
     } while(Ivan != bus->first_client);
 
-  /*  bus->babki_context.uc_link = &main_context;
-    bus->babki_context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
-    bus->babki_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
-    getcontext(&bus->babki_context);
-
-    makecontext(&bus->babki_context, (void (*)(void))baba_handler, 
-            1, bus); */
     struct babka* Katya = bus->first_babka;
     do {
         Katya->context.uc_link = &main_context;
@@ -136,13 +137,22 @@ void init_contexts(marshrutka_t* bus) {
 
         getcontext(&Katya->context);
         makecontext(&Katya->context, (void (*)(void))baba_handler,
-            3, bus, Katya, bus->first_client);
+            2, bus, Katya);
         Katya = Katya->next_babka;
     } while(Katya != bus->first_babka);
+
+    bus->toggle.uc_link = &main_context;
+    bus->toggle.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
+    bus->toggle.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+
+    getcontext(&bus->toggle);
+    makecontext(&bus->toggle, (void (*)(void))gears,
+            1, bus);
 
     printf("инициализация контекстов окончена\n");
 
 }
+
 /*приветсвие и посдка происходит без корутин*/
 void init_marshrutka(marshrutka_t* bus, int density) {
     /*инициализация пассажиров*/
@@ -161,7 +171,13 @@ void init_marshrutka(marshrutka_t* bus, int density) {
 
     bus->last_client->next_client = bus->first_client;
     spawn_babki(bus, density);
+
+    struct babka* b = bus->first_babka;
     init_contexts(bus);
+    do {
+        printf("check %d\n", b->id);
+        b = b->next_babka;
+    } while(b != bus->first_babka);
     return;	
 }
 
