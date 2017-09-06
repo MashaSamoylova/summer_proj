@@ -87,3 +87,45 @@ void broadcast(marshrutka_t *bus, char* message) {
 
 }
 
+void spawn_babki(marshrutka_t* bus, int density) {
+
+    density--;
+    bus->first_babka = calloc(1, sizeof( struct babka ));
+    add_babka(bus->first_babka, density);
+    bus->last_babka = bus->first_babka;
+    density--;
+
+    while(density != -1) {
+        bus->last_babka->next_babka = calloc(1, sizeof(struct babka));
+        bus->last_babka = bus->last_babka->next_babka;
+        add_babka(bus->last_babka, density);
+        density--;
+    }
+
+    bus->last_babka->next_babka = bus->first_babka;
+}
+
+void spawn_passazhiri( marshrutka_t* bus) {
+    bus->count_of_clnts = 0;
+    
+    bus->first_client = calloc(1, sizeof( struct client ));
+    add_passanger(bus->first_client, bus->dvigatel);
+    bus->last_client = bus->first_client;
+
+    for(int i = 1; i < MAX_CLIENTS; i++) {
+
+        bus->last_client->next_client = calloc( 1, sizeof(struct client) );
+        bus->last_client = bus->last_client->next_client;
+        add_passanger(bus->last_client, bus->dvigatel);
+    }
+
+    bus->last_client->next_client = bus->first_client;
+  
+}
+
+void init_marshrutka(marshrutka_t* bus, int density) {
+    spawn_passazhiri(bus); 
+    spawn_babki(bus, density);
+}
+
+

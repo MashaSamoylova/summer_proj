@@ -1,6 +1,7 @@
 #pragma once
-#include "event.h"
 #include <ucontext.h>
+
+#include "event.h"
 
 struct client {
 	int connection;
@@ -130,6 +131,31 @@ void handling(struct client* Ivan) {
         delete_event(Ivan);
         printf("event is handled\n");
     }
+}
+
+int new_client(int dvigatel) {
+
+    struct sockaddr_in cli_addr;
+    int newsockfd;
+    socklen_t client_ss;
+
+    client_ss = sizeof(cli_addr);
+    newsockfd = accept(dvigatel, (struct sockaddr *) &cli_addr, &client_ss);
+    if (newsockfd < 0) {
+        printf("ERROR on accept\n");
+    }
+    return newsockfd;
+}
+
+
+void add_passanger(struct client* Ivan, int dvigatel) {
+    
+    Ivan->connection = new_client(dvigatel);
+    Ivan->ticket = 0;
+    Ivan->first_event = NULL;
+    Ivan->next_client = NULL;
+    
+    hello(Ivan);
 }
 
 

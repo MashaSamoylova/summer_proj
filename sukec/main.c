@@ -44,65 +44,12 @@ void handler(marshrutka_t* bus, struct client* Ivan) {
 }
 
 void* otpravit_marshrutku(void* arg) {
-    getcontext(&main_context);
 	marshrutka_t *bus = ((thread_arg*)arg)->bus;
     broadcast(bus, "\nотправляемся\n"); 
     gears(bus);
     vypnut_passazhirov(bus);
     scrabwoman(bus);
 	return NULL;
-}
-
-int new_client(int dvigatel) {
-
-    struct sockaddr_in cli_addr;
-    int newsockfd;
-    socklen_t client_ss;
-
-    client_ss = sizeof(cli_addr);
-    newsockfd = accept(dvigatel, (struct sockaddr *) &cli_addr, &client_ss);
-    if (newsockfd < 0) {
-        printf("ERROR on accept\n");
-    }
-    return newsockfd;
-}
-
-void add_babka(struct babka* Katya, int id) {
-    Katya->next_babka = NULL;
-    Katya->first_event = NULL;
-    Katya->id = id;
-    Katya->hp = 100;
-    
-}
-
-void spawn_babki(marshrutka_t* bus, int density) {
-
-    density--;
-    bus->first_babka = calloc(1, sizeof( struct babka ));
-    add_babka(bus->first_babka, density);
-    bus->last_babka = bus->first_babka;
-    density--;
-
-    while(density != -1) {
-        bus->last_babka->next_babka = calloc(1, sizeof(struct babka));
-        bus->last_babka = bus->last_babka->next_babka;
-        add_babka(bus->last_babka, density);
-        density--;
-    }
-
-    bus->last_babka->next_babka = bus->first_babka;
-}
-
-void add_passanger(struct client* Ivan, marshrutka_t* bus) {
-    
-    Ivan->connection = new_client(bus->dvigatel);
-    Ivan->ticket = 0;
-    Ivan->id = bus->count_of_clnts;
-    Ivan->first_event = NULL;
-    Ivan->next_client = NULL;
-    
-    hello(Ivan);
-    bus->count_of_clnts++;
 }
 
 void init_contexts(marshrutka_t* bus) {
@@ -153,34 +100,6 @@ void init_contexts(marshrutka_t* bus) {
 
 }
 
-/*приветсвие и посдка происходит без корутин*/
-void init_marshrutka(marshrutka_t* bus, int density) {
-    /*инициализация пассажиров*/
-    bus->count_of_clnts = 0;
-    
-    bus->first_client = calloc(1, sizeof( struct client ));
-    add_passanger(bus->first_client, bus);
-    bus->last_client = bus->first_client;
-
-    for(int i = 1; i < MAX_CLIENTS; i++) {
-
-        bus->last_client->next_client = calloc( 1, sizeof(struct client) );
-        bus->last_client = bus->last_client->next_client;
-        add_passanger(bus->last_client, bus);
-    }
-
-    bus->last_client->next_client = bus->first_client;
-    spawn_babki(bus, density);
-
-    struct babka* b = bus->first_babka;
-    init_contexts(bus);
-    do {
-        printf("check %d\n", b->id);
-        b = b->next_babka;
-    } while(b != bus->first_babka);
-    return;	
-}
-
 int main(int argc, char* argv[]) {
      setbuf ( stdout , NULL ); 
 
@@ -209,6 +128,7 @@ int main(int argc, char* argv[]) {
 		marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
 		avtobus_442->dvigatel = dvigatel;
 		init_marshrutka(avtobus_442, (int)density);
+        init_contexts(avtobus_442);
       
         ta.bus = avtobus_442;
 	   //FIXME next bus will not go before the last is will not come	
