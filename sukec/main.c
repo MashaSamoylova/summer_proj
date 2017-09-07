@@ -57,7 +57,7 @@ void init_contexts(marshrutka_t* bus) {
     
     struct client* Ivan = bus->first_client;
     do {
-        Ivan->context.uc_link = &main_context;
+        Ivan->context.uc_link = NULL;
         Ivan->context.uc_stack.ss_sp = calloc(2*SIGSTKSZ, sizeof(char));
         Ivan->context.uc_stack.ss_size = 2*SIGSTKSZ * sizeof(char);
 
@@ -65,7 +65,7 @@ void init_contexts(marshrutka_t* bus) {
         makecontext(&Ivan->context, (void (*)(void))handler,
             2, bus, Ivan);
 
-        Ivan->read_context.uc_link = &main_context;
+        Ivan->read_context.uc_link = NULL;
         Ivan->read_context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
         Ivan->read_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
 
@@ -78,7 +78,7 @@ void init_contexts(marshrutka_t* bus) {
 
     struct babka* Katya = bus->first_babka;
     do {
-        Katya->context.uc_link = &main_context;
+        Katya->context.uc_link = NULL;
         Katya->context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
         Katya->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
 
@@ -88,7 +88,7 @@ void init_contexts(marshrutka_t* bus) {
         Katya = Katya->next_babka;
     } while(Katya != bus->first_babka);
 
-    bus->toggle.uc_link = &main_context;
+    bus->toggle.uc_link = NULL;
     bus->toggle.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
     bus->toggle.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
 
