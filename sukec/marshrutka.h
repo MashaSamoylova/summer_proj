@@ -1,26 +1,13 @@
 #pragma once
-#include "client.h"
-#include "config.h"
-#include "babka.h"
-
-typedef struct {
-    struct client* first_client;
-    struct client* last_client;
-    int count_of_clnts;
-    int dvigatel;
-    struct babka* first_babka;
-    struct babka* last_babka;
-    ucontext_t toggle;
-} marshrutka_t;
-
+#include "main.h"
 /*for create a thread*/
-typedef struct { 
+/*typedef struct { 
     marshrutka_t *bus;
     int i;
-} thread_arg;
+} thread_arg;*/
 
 /*очистка памяти*/
-void scrabwoman(marshrutka_t* bus) {
+/*void scrabwoman(marshrutka_t* bus) {
     struct client* arrow = bus->first_client;
     struct client* cup;
     
@@ -32,17 +19,17 @@ void scrabwoman(marshrutka_t* bus) {
     }
 
     free(bus);
-}
+}*/
 
 /*отключение всех клиентов*/
-void vypnut_passazhirov(marshrutka_t *bus) {
+/*void vypnut_passazhirov(marshrutka_t *bus) {
     struct client* arrow = bus->first_client;
     
     while(arrow) {
         close(arrow->connection);
         arrow = arrow->next_client;
     }
-}
+}*/
 
 
 /*возвращает сокет для всего сервиса*/
@@ -76,8 +63,7 @@ int zavesti_marshrutku() {
     return dvigatel;
 }
 
-/*заорать на весь автобус*/
-void broadcast(marshrutka_t *bus, char* message) {
+/*void broadcast(marshrutka_t *bus, char* message) {
     struct client* arrow = bus->first_client;
 
     do {
@@ -123,9 +109,13 @@ void spawn_passazhiri( marshrutka_t* bus) {
   
 }
 
+*/
 void init_marshrutka(marshrutka_t* bus, int density) {
-    spawn_passazhiri(bus); 
-    spawn_babki(bus, density);
-}
+    bus->first_client = NULL;
+    bus->last_client = NULL;
+    bus->n_clients = 0;
 
+  //  spawn_passazhiri(bus); 
+  //  spawn_babki(bus, density);
+}
 

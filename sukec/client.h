@@ -2,20 +2,9 @@
 #include <ucontext.h>
 
 #include "event.h"
+#include "main.h"
 
-struct client {
-	int connection;
-	int seat;
-	int ticket;
-	int id;
-    char buffer[1024];
-    struct event* first_event;
-    struct client* next_client;
-    ucontext_t context;
-    ucontext_t read_context;
-};
-
-int empty(struct client* Ivan) {
+/*int empty(struct client* Ivan) {
     
     if(Ivan->first_event == NULL) {
         return 1;
@@ -42,9 +31,9 @@ void add_event(struct client* Ivan, struct event* sc) {
     }
     last = sc;
 }
-
+*/
 /*generating event to normal client from babka with id = ask_id*/
-void generate_event(struct client* Ivan, int code, int ask_id) { 
+/*void generate_event(struct client* Ivan, int code, int ask_id) { 
     struct event* sc = calloc(1, sizeof(struct event));
     
     sc->code = code;
@@ -98,7 +87,7 @@ void read_answer(struct client* Ivan) {
     }
 }
 
-
+*/
 /*void open_window(struct client* Ivan) {
     write_to_client(Ivan, "Молодой человек, откройте окно!\n\n1. открыть окно\n 2.ударить бабку\n");
     int answer = 0;
@@ -114,7 +103,7 @@ void read_answer(struct client* Ivan) {
 
 }*/
 
-void handling(struct client* Ivan) {
+/*void handling(struct client* Ivan) {
     while( !empty(Ivan) ) {
         int code = Ivan->first_event->code;
         printf("id %d\n", Ivan->id);
@@ -132,8 +121,9 @@ void handling(struct client* Ivan) {
         printf("event is handled\n");
     }
 }
+*/
 
-int new_client(int dvigatel) {
+/*int new_client(int dvigatel) {
 
     struct sockaddr_in cli_addr;
     int newsockfd;
@@ -156,6 +146,26 @@ void add_passanger(struct client* Ivan, int dvigatel) {
     Ivan->next_client = NULL;
     
     hello(Ivan);
+}
+*/
+
+int insert_client(struct client_t* Ivan) {
+    
+    if(!Ivan->bus) {
+        printf("клиент без автобуса\n");
+        return -1;
+    }
+
+    printf("добавление\n");
+    Ivan->id = rand()%1000;
+    Ivan->first_event = NULL;
+    Ivan->last_event = NULL;
+
+    struct client_t* next = Ivan->bus->first_client;
+    Ivan->next_client = next;
+    
+    Ivan->bus->last_client = Ivan;
+    return 0;
 }
 
 

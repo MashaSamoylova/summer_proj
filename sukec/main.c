@@ -10,9 +10,12 @@
 #include <pthread.h>
 #include <fcntl.h>
 
+#include "main.h"
+
+#include "passazhir.h"
 #include "marshrutka.h"
 
-void gears(marshrutka_t* bus) {
+/*void gears(marshrutka_t* bus) {
     struct client* Ivan = bus->first_client;
     struct babka* Katya = bus->first_babka;
 
@@ -99,7 +102,7 @@ void init_contexts(marshrutka_t* bus) {
     printf("инициализация контекстов окончена\n");
 
 }
-
+*/
 int main(int argc, char* argv[]) {
      setbuf ( stdout , NULL ); 
 
@@ -121,7 +124,13 @@ int main(int argc, char* argv[]) {
                 exit(-1);
     }
 
-    pthread_t id;
+    marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
+    avtobus_442->dvigatel = dvigatel;
+    init_marshrutka(avtobus_442, (int)density);
+    add_passzhir(avtobus_442);
+    (*(avtobus_442->first_client->handler))(4);
+
+  /*  pthread_t id;
     thread_arg ta;
     ta.i = dvigatel;
     while(442) {
@@ -136,6 +145,6 @@ int main(int argc, char* argv[]) {
   	  //  pthread_join(id, NULL);
         //printf("ДЖОИН\n");
     }
-
+*/
     return 0;
 }
