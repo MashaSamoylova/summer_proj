@@ -158,13 +158,14 @@ int insert_client(struct client_t* Ivan) {
 
     printf("добавление\n");
     Ivan->id = rand()%1000;
+    printf("%d\n", Ivan->id);
     Ivan->first_event = NULL;
     Ivan->last_event = NULL;
 
-    struct client_t* next = Ivan->bus->first_client;
-    Ivan->next_client = next;
-    
+    Ivan->bus->last_client->next_client = Ivan;
     Ivan->bus->last_client = Ivan;
+    Ivan->next_client = Ivan->bus->first_client;
+    
     return 0;
 }
 

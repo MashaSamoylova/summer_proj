@@ -104,7 +104,7 @@ void init_contexts(marshrutka_t* bus) {
 }
 */
 int main(int argc, char* argv[]) {
-     setbuf ( stdout , NULL ); 
+    setbuf ( stdout , NULL ); 
 
     if(argc < 2) {
         printf("please, use ./main <density of babok>\n");
@@ -127,9 +127,16 @@ int main(int argc, char* argv[]) {
     marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
     avtobus_442->dvigatel = dvigatel;
     init_marshrutka(avtobus_442, (int)density);
-    add_passzhir(avtobus_442);
-    (*(avtobus_442->first_client->handler))(4);
+    
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        add_passzhir(avtobus_442);
+    }
 
+    struct client_t *arrow = avtobus_442->first_client;
+    for(int i = 0; i< MAX_CLIENTS; i++) {
+        printf("%d\n", arrow->id);
+        arrow = arrow->next_client;
+    }
   /*  pthread_t id;
     thread_arg ta;
     ta.i = dvigatel;

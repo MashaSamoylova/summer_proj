@@ -24,6 +24,7 @@ struct client_t {
     struct event *first_event;
     struct event *last_event;    
     int (*handler) (int);
+    ucontext_t next_context;
 };
 
 struct passazhir {
