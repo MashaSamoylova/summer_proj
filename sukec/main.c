@@ -31,15 +31,6 @@ void handler(marshrutka_t* bus, struct client* Ivan) {
     }
 }
 
-void* otpravit_marshrutku(void* arg) {
-	marshrutka_t *bus = ((thread_arg*)arg)->bus;
-    broadcast(bus, "\nотправляемся\n"); 
-    gears(bus);
-    vypnut_passazhirov(bus);
-    scrabwoman(bus);
-	return NULL;
-}
-
 */
 int main(int argc, char* argv[]) {
     setbuf ( stdout , NULL ); 
@@ -62,23 +53,17 @@ int main(int argc, char* argv[]) {
                 exit(-1);
     }
 
-    marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
-    avtobus_442->dvigatel = dvigatel;
-    init_marshrutka(avtobus_442, (int)density);
-    
-    for(int i = 0; i < MAX_CLIENTS; i++) {
-        add_passzhir(avtobus_442);
-    }
-
-    loop(avtobus_442->first_client);
-  /*  pthread_t id;
+    pthread_t id;
     thread_arg ta;
     ta.i = dvigatel;
     while(442) {
 		marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
 		avtobus_442->dvigatel = dvigatel;
 		init_marshrutka(avtobus_442, (int)density);
-        init_contexts(avtobus_442);
+         
+        for(int i = 0; i < MAX_CLIENTS; i++) {
+            add_passzhir(avtobus_442);
+        }
       
         ta.bus = avtobus_442;
 	   //FIXME next bus will not go before the last is will not come	
@@ -86,6 +71,5 @@ int main(int argc, char* argv[]) {
   	  //  pthread_join(id, NULL);
         //printf("ДЖОИН\n");
     }
-*/
     return 0;
 }

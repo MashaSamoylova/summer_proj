@@ -110,6 +110,18 @@ void spawn_passazhiri( marshrutka_t* bus) {
 }
 
 */
+
+void* otpravit_marshrutku(void* arg) {
+	marshrutka_t *bus = ((thread_arg*)arg)->bus;
+    loop(bus->first_client);
+	return NULL;
+}
+
+
+void start_marshrutaka(marshrutka_t* bus) {
+    loop(bus->first_client);
+}
+
 void init_marshrutka(marshrutka_t* bus, int density) {
     bus->first_client = NULL;
     bus->last_client = NULL;
