@@ -149,6 +149,25 @@ void add_passanger(struct client* Ivan, int dvigatel) {
 }
 */
 
+int loop(struct client_t* Ivan) {
+    while(1) {
+        printf("client id %d\n", Ivan->id);
+        swapcontext(&Ivan->context, &Ivan->next_client->context);
+    }
+}
+
+int init_context(struct client_t *Ivan) {
+    Ivan->context.uc_link = NULL;
+    Ivan->context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
+    Ivan->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
+
+    getcontext(&Ivan->context);
+    makecontext(&Ivan->context, (void (*)(void))loop,
+        1, Ivan);
+    return 0;
+
+}
+
 int insert_client(struct client_t* Ivan) {
     
     if(!Ivan->bus) {
@@ -165,7 +184,8 @@ int insert_client(struct client_t* Ivan) {
     Ivan->bus->last_client->next_client = Ivan;
     Ivan->bus->last_client = Ivan;
     Ivan->next_client = Ivan->bus->first_client;
-    
+   
+    init_context(Ivan);
     return 0;
 }
 

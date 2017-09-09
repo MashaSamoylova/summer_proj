@@ -132,11 +132,7 @@ int main(int argc, char* argv[]) {
         add_passzhir(avtobus_442);
     }
 
-    struct client_t *arrow = avtobus_442->first_client;
-    for(int i = 0; i< MAX_CLIENTS; i++) {
-        printf("%d\n", arrow->id);
-        arrow = arrow->next_client;
-    }
+    loop(avtobus_442->first_client);
   /*  pthread_t id;
     thread_arg ta;
     ta.i = dvigatel;
