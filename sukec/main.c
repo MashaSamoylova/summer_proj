@@ -14,22 +14,7 @@
 
 #include "passazhir.h"
 #include "marshrutka.h"
-
-/*void gears(marshrutka_t* bus) {
-    struct client* Ivan = bus->first_client;
-    struct babka* Katya = bus->first_babka;
-
-    while(1) {
-        swapcontext(&bus->toggle, &Ivan->context);
-        swapcontext(&bus->toggle, &Katya->context);
-
-        Ivan = Ivan->next_client;
-        Katya = Katya->next_babka;
-        sleep(0.5);
-    }
-    
-}
-
+/*
 void baba_handler(marshrutka_t* bus, struct babka* Katya) {
     
     while(1) {
@@ -55,53 +40,6 @@ void* otpravit_marshrutku(void* arg) {
 	return NULL;
 }
 
-void init_contexts(marshrutka_t* bus) {
-    printf("инициализация контекстов\n");
-    
-    struct client* Ivan = bus->first_client;
-    do {
-        Ivan->context.uc_link = NULL;
-        Ivan->context.uc_stack.ss_sp = calloc(2*SIGSTKSZ, sizeof(char));
-        Ivan->context.uc_stack.ss_size = 2*SIGSTKSZ * sizeof(char);
-
-        getcontext(&Ivan->context);
-        makecontext(&Ivan->context, (void (*)(void))handler,
-            2, bus, Ivan);
-
-        Ivan->read_context.uc_link = NULL;
-        Ivan->read_context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
-        Ivan->read_context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
-
-        getcontext(&Ivan->read_context);
-        makecontext(&Ivan->read_context, (void (*)(void))read_answer,
-                1, Ivan); 
-
-        Ivan = Ivan->next_client;
-    } while(Ivan != bus->first_client);
-
-    struct babka* Katya = bus->first_babka;
-    do {
-        Katya->context.uc_link = NULL;
-        Katya->context.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
-        Katya->context.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
-
-        getcontext(&Katya->context);
-        makecontext(&Katya->context, (void (*)(void))baba_handler,
-            2, bus, Katya);
-        Katya = Katya->next_babka;
-    } while(Katya != bus->first_babka);
-
-    bus->toggle.uc_link = NULL;
-    bus->toggle.uc_stack.ss_sp = calloc(SIGSTKSZ, sizeof(char));
-    bus->toggle.uc_stack.ss_size = SIGSTKSZ * sizeof(char);
-
-    getcontext(&bus->toggle);
-    makecontext(&bus->toggle, (void (*)(void))gears,
-            1, bus);
-
-    printf("инициализация контекстов окончена\n");
-
-}
 */
 int main(int argc, char* argv[]) {
     setbuf ( stdout , NULL ); 
