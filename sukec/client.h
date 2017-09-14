@@ -26,10 +26,6 @@ void hello(struct client* qw) {
     return;	
 }
 
-void write_to_client(struct client* Ivan, char* message) {
-    write(Ivan->connection, message, strlen(message)); 
-}
-
 void read_answer(struct client* Ivan) {
     printf("сюда доходит\n");
     int flags = fcntl(Ivan->connection, F_GETFL, 0);
@@ -124,7 +120,6 @@ int loop(struct client_t* Ivan) {
         }
         
         Ivan->generator(Ivan);
-        sleep(2);
         swapcontext(&Ivan->context, &Ivan->next_client->context);
     }
 }

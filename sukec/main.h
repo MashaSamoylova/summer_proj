@@ -1,5 +1,6 @@
 #pragma once
 #include <ucontext.h>
+#include <poll.h>
 #include "config.h"
 
 typedef struct {
@@ -28,10 +29,11 @@ struct client_t {
     int (*handler) (struct client_t*);
     int (*generator) (struct client_t*);
     ucontext_t context;
-};
+ };
 
 struct passazhir {
     struct client_t client;
+    struct pollfd ufds;
     int connection;
 };
 
