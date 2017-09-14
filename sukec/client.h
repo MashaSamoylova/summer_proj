@@ -124,7 +124,7 @@ int loop(struct client_t* Ivan) {
         }
         
         Ivan->generator(Ivan);
-        sleep(0.5);
+        sleep(2);
         swapcontext(&Ivan->context, &Ivan->next_client->context);
     }
 }

@@ -21,6 +21,28 @@ int babka_generator(struct client_t* Katya){
 }
 
 int baba_handler(struct client_t* Katya) {
+    
+    struct babka *Klava = (struct babka*)Katya;
+    
+    while( !empty(Katya) ) {
+        int code = Katya->first_event->code;
+        printf("id %d\n", Katya->id);
+        /*и здесь также добавить обработчики на события*/
+        switch(code) {
+            case 101:
+                printf("event 101\n");
+                break;
+            case 102:
+                printf("event 102\n");
+                break;
+            default:
+                break;
+        }
+        delete_event(Katya);
+        printf("event is handled\n");
+    }
+
+    
     printf("baba action %d\n", Katya->id);
     return 0;
 }
