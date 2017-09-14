@@ -26,43 +26,6 @@ void hello(struct client* qw) {
     return;	
 }
 
-void read_answer(struct client* Ivan) {
-    printf("сюда доходит\n");
-    int flags = fcntl(Ivan->connection, F_GETFL, 0);
-    if(fcntl(Ivan->connection, F_SETFL, flags | O_NONBLOCK)) {
-        printf("something wrong\n");
-    }
-
-    int result;
-    while(1) {
-
-        result = read(Ivan->connection, Ivan->buffer, 1024);
-        
-        if(result != -1 ) {
-            printf("%s\n", Ivan->buffer);
-        }
-        swapcontext(&Ivan->read_context, &Ivan->context);
-    }
-}
-
-void handling(struct client* Ivan) {
-    while( !empty(Ivan) ) {
-        int code = Ivan->first_event->code;
-        printf("id %d\n", Ivan->id);
-        switch(code) {
-            case 1:
-                printf("event 1\n");
-                break;
-            case 2:
-                printf("event 2\n");
-                break;
-            default:
-                break;
-        }
-        delete_event(Ivan);
-        printf("event is handled\n");
-    }
-}
 */
 
 int empty(struct client_t *Ivan) {

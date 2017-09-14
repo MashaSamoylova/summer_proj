@@ -72,25 +72,6 @@ int zavesti_marshrutku() {
     } while(arrow != bus->first_client);
 
 }
-
-void spawn_babki(marshrutka_t* bus, int density) {
-
-    density--;
-    bus->first_babka = calloc(1, sizeof( struct babka ));
-    add_babka(bus->first_babka, density);
-    bus->last_babka = bus->first_babka;
-    density--;
-
-    while(density != -1) {
-        bus->last_babka->next_babka = calloc(1, sizeof(struct babka));
-        bus->last_babka = bus->last_babka->next_babka;
-        add_babka(bus->last_babka, density);
-        density--;
-    }
-
-    bus->last_babka->next_babka = bus->first_babka;
-}
-
 */
 
 void* otpravit_marshrutku(void* arg) {
