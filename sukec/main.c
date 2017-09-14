@@ -13,25 +13,9 @@
 #include "main.h"
 
 #include "passazhir.h"
+#include "babka.h"
 #include "marshrutka.h"
-/*
-void baba_handler(marshrutka_t* bus, struct babka* Katya) {
-    
-    while(1) {
-        printf("baba id %d\n", Katya->id);
-        swapcontext(&Katya->context, &bus->toggle);
-    }
-}
 
-void handler(marshrutka_t* bus, struct client* Ivan) {
-    
-    while(1) {
-        printf("client id %d\n", Ivan->id);
-        swapcontext(&Ivan->context, &bus->toggle);
-    }
-}
-
-*/
 int main(int argc, char* argv[]) {
     setbuf ( stdout , NULL ); 
 
@@ -59,12 +43,19 @@ int main(int argc, char* argv[]) {
     while(442) {
 		marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
 		avtobus_442->dvigatel = dvigatel;
-		init_marshrutka(avtobus_442, (int)density);
+		init_marshrutka(avtobus_442);
          
         for(int i = 0; i < MAX_CLIENTS; i++) {
             add_passzhir(avtobus_442);
+            avtobus_442->n_clients++;
+        }
+        
+        for(int i = 0; i < density; i++) {
+            add_babka(avtobus_442);
+            avtobus_442->n_babok++;
         }
       
+        printf("sukablit\n");
         ta.bus = avtobus_442;
 	   //FIXME next bus will not go before the last is will not come	
 	    pthread_create(&id, NULL, &otpravit_marshrutku, &ta);

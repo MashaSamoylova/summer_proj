@@ -4,45 +4,7 @@
 #include "event.h"
 #include "main.h"
 
-/*int empty(struct client* Ivan) {
-    
-    if(Ivan->first_event == NULL) {
-        return 1;
-    }
-    return 0;
-}
-
-void delete_event(struct client* Ivan) {
-    struct event* cup = Ivan->first_event;
-    Ivan->first_event = Ivan->first_event->next_event;
-    free(cup);
-}
-
-void add_event(struct client* Ivan, struct event* sc) {
-    
-    if( empty(Ivan) ) { //queue is empty
-        Ivan->first_event = sc;
-        return;
-    }
-
-    struct event* last = Ivan->first_event;
-    while(last->next_event != NULL) {
-        last = last->next_event;
-    }
-    last = sc;
-}
-*/
-/*generating event to normal client from babka with id = ask_id*/
-/*void generate_event(struct client* Ivan, int code, int ask_id) { 
-    struct event* sc = calloc(1, sizeof(struct event));
-    
-    sc->code = code;
-    sc->ask_id = ask_id;
-    sc->next_event = NULL;
-
-    add_event(Ivan, sc);
-}
-
+/*
 void hello(struct client* qw) {
     char buff[256];
     char p[1000];
@@ -87,23 +49,7 @@ void read_answer(struct client* Ivan) {
     }
 }
 
-*/
-/*void open_window(struct client* Ivan) {
-    write_to_client(Ivan, "Молодой человек, откройте окно!\n\n1. открыть окно\n 2.ударить бабку\n");
-    int answer = 0;
-    
-    while(!answer) {
-        swapcontext(&Ivan->context, &Ivan->read_context);
-        answer = atoi(Ivan->buffer);
-        swapcontext(&Ivan->context, &Ivan->next_client->context);
-    }
-
-    printf("открытие окна %d %d\n");
-
-
-}*/
-
-/*void handling(struct client* Ivan) {
+void handling(struct client* Ivan) {
     while( !empty(Ivan) ) {
         int code = Ivan->first_event->code;
         printf("id %d\n", Ivan->id);
@@ -123,35 +69,62 @@ void read_answer(struct client* Ivan) {
 }
 */
 
-/*int new_client(int dvigatel) {
-
-    struct sockaddr_in cli_addr;
-    int newsockfd;
-    socklen_t client_ss;
-
-    client_ss = sizeof(cli_addr);
-    newsockfd = accept(dvigatel, (struct sockaddr *) &cli_addr, &client_ss);
-    if (newsockfd < 0) {
-        printf("ERROR on accept\n");
+int empty(struct client_t *Ivan) {
+    
+    if(Ivan->first_event == NULL) {
+        return 1;
     }
-    return newsockfd;
+    return 0;
 }
 
+void add_event(struct client_t *Ivan, struct event *sc) {
+    
+    if( empty(Ivan) ) { //queue is empty
+        Ivan->first_event = sc;
+        return;
+    }
 
-void add_passanger(struct client* Ivan, int dvigatel) {
-    
-    Ivan->connection = new_client(dvigatel);
-    Ivan->ticket = 0;
-    Ivan->first_event = NULL;
-    Ivan->next_client = NULL;
-    
-    hello(Ivan);
+    struct event* last = Ivan->first_event;
+    while(last->next_event != NULL) {
+        last = last->next_event;
+    }
+    last = sc;
 }
-*/
+
+void delete_event(struct client_t *Ivan) {
+    struct event* cup = Ivan->first_event;
+    Ivan->first_event = Ivan->first_event->next_event;
+    free(cup);
+}
+
+void generate_event(int number, int code, struct client_t *Ivan) {
+    
+    struct client_t *arrow = Ivan->bus->first_client;
+   
+    //поиск клиента, которому хотят добавить событие
+    while(number) {
+        arrow = arrow->next_client;
+        number--;
+    }
+
+    struct event *sc = calloc(1, sizeof(struct event));
+    sc->code = code;
+    sc->ask_id = Ivan->id;
+    sc->next_event = NULL;
+
+    add_event(arrow, sc);
+}
 
 int loop(struct client_t* Ivan) {
     while(1) {
         printf("client id %d\n", Ivan->id);
+        
+        if(!empty(Ivan)) {
+            Ivan->handler(Ivan);
+        }
+        
+        Ivan->generator(Ivan);
+        sleep(0.5);
         swapcontext(&Ivan->context, &Ivan->next_client->context);
     }
 }

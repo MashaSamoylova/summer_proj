@@ -91,28 +91,11 @@ void spawn_babki(marshrutka_t* bus, int density) {
     bus->last_babka->next_babka = bus->first_babka;
 }
 
-void spawn_passazhiri( marshrutka_t* bus) {
-    bus->count_of_clnts = 0;
-    
-    bus->first_client = calloc(1, sizeof( struct client ));
-    add_passanger(bus->first_client, bus->dvigatel);
-    bus->last_client = bus->first_client;
-
-    for(int i = 1; i < MAX_CLIENTS; i++) {
-
-        bus->last_client->next_client = calloc( 1, sizeof(struct client) );
-        bus->last_client = bus->last_client->next_client;
-        add_passanger(bus->last_client, bus->dvigatel);
-    }
-
-    bus->last_client->next_client = bus->first_client;
-  
-}
-
 */
 
 void* otpravit_marshrutku(void* arg) {
 	marshrutka_t *bus = ((thread_arg*)arg)->bus;
+    printf("поееехааали\n");
     loop(bus->first_client);
 	return NULL;
 }
@@ -122,12 +105,11 @@ void start_marshrutaka(marshrutka_t* bus) {
     loop(bus->first_client);
 }
 
-void init_marshrutka(marshrutka_t* bus, int density) {
+void init_marshrutka(marshrutka_t* bus) {
     bus->first_client = NULL;
     bus->last_client = NULL;
     bus->n_clients = 0;
-
-  //  spawn_passazhiri(bus); 
-  //  spawn_babki(bus, density);
+    bus->n_babok = 0;
+    bus->status_window = 1;
 }
 
