@@ -53,15 +53,7 @@ void add_babka(marshrutka_t* bus) {
     struct client_t *client = (struct client_t*)Katya;
 
     Katya->client.bus = bus;
-
-    if(bus->first_client == NULL) {
-        bus->first_client = client;
-        bus->last_client = client;
-        insert_client(client);
-    }
-    else {
-        insert_client(client);
-    }
+    insert_client(client);
 
     Katya->hp = 100;
     Katya->client.handler = baba_handler;
