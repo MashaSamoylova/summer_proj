@@ -103,14 +103,7 @@ int add_passzhir(marshrutka_t* bus) {
     struct client_t* client = (struct client_t*)Ivan;
 
     Ivan->client.bus = bus;
-    if(bus->first_client == NULL) {
-        bus->first_client = client; 
-        bus->last_client = client;
-        insert_client(client);
-    }
-    else {
-        insert_client(client);
-    }
+    insert_client(client);
     
     Ivan->ufds.fd = new_client(bus->dvigatel);
     Ivan->client.handler = passazhir_handler;

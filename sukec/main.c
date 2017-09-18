@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 		marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
 		avtobus_442->dvigatel = dvigatel;
 		init_marshrutka(avtobus_442);
-         
+
         for(int i = 0; i < MAX_CLIENTS; i++) {
             add_passzhir(avtobus_442);
             avtobus_442->n_clients++;

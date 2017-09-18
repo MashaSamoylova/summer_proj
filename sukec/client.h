@@ -106,11 +106,15 @@ int insert_client(struct client_t* Ivan) {
         return -1;
     }
 
-    printf("добавление\n");
     Ivan->id = rand()%1000;
     printf("%d\n", Ivan->id);
     Ivan->first_event = NULL;
     Ivan->last_event = NULL;
+
+    if(Ivan->bus->first_client == NULL) {
+        Ivan->bus->first_client = Ivan; 
+        Ivan->bus->last_client = Ivan;
+    }
 
     Ivan->bus->last_client->next_client = Ivan;
     Ivan->bus->last_client = Ivan;
