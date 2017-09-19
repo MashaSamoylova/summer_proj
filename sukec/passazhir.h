@@ -22,6 +22,27 @@ int write_passazh(struct passazhir* Tom, char* message) {
     return -1;
 }
 
+void hello(struct passazhir* Tom) {
+    char buff[256];
+    char p[1000];
+	*p = 0;
+    FILE *bus_ascii = fopen("bus", "r");
+    if(bus_ascii == NULL) {
+        printf("not found the bus:(\n");
+        exit(1);
+    }
+
+    while(fgets(buff, 256, bus_ascii)) {
+        strncat(p, buff, strlen(buff));
+    }
+    write_passazh(Tom, p);
+    fclose(bus_ascii);
+
+    char msg[40] = "\nМАРШРУТКА № 442\n";
+    write_passazh(Tom, msg);
+    return;	
+}
+
 int read_answer(struct passazhir* Tom, char *buffer, int size) {
     Tom->ufds.events = POLLIN;
     int n = poll(&Tom->ufds, 1, 10000);
@@ -98,7 +119,6 @@ int new_client(int dvigatel) {
 
 int add_passzhir(marshrutka_t* bus) {
 
-    printf("добавление пассажира\n");
     struct passazhir *Ivan = calloc(1, sizeof(struct passazhir));
     struct client_t* client = (struct client_t*)Ivan;
 
@@ -108,5 +128,6 @@ int add_passzhir(marshrutka_t* bus) {
     Ivan->ufds.fd = new_client(bus->dvigatel);
     Ivan->client.handler = passazhir_handler;
     Ivan->client.generator = passazhir_generator;
+    hello(Ivan);
     return 0;
 }

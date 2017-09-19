@@ -48,7 +48,6 @@ int baba_handler(struct client_t* Katya) {
 }
 
 void add_babka(marshrutka_t* bus) {
-    printf("добавление бабки\n");
     struct babka *Katya = calloc(1, sizeof(struct babka));
     struct client_t *client = (struct client_t*)Katya;
 

@@ -1,12 +1,6 @@
 #pragma once
 #include "main.h"
-/*for create a thread*/
-/*typedef struct { 
-    marshrutka_t *bus;
-    int i;
-} thread_arg;*/
-
-/*очистка памяти*/
+//*очистка памяти*/
 /*void scrabwoman(marshrutka_t* bus) {
     struct client* arrow = bus->first_client;
     struct client* cup;
@@ -71,26 +65,11 @@ int zavesti_marshrutku() {
         arrow = arrow->next_client;
     } while(arrow != bus->first_client);
 
-}
-*/
+}*/
 
-void* otpravit_marshrutku(void* arg) {
-	marshrutka_t *bus = ((thread_arg*)arg)->bus;
+void* otpravit_marshrutku(marshrutka_t *bus) {
     printf("поееехааали\n");
     loop(bus->first_client);
 	return NULL;
-}
-
-
-void start_marshrutaka(marshrutka_t* bus) {
-    loop(bus->first_client);
-}
-
-void init_marshrutka(marshrutka_t* bus) {
-    bus->first_client = NULL;
-    bus->last_client = NULL;
-    bus->n_clients = 0;
-    bus->n_babok = 0;
-    bus->status_window = 1;
 }
 

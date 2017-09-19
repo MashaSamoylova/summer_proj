@@ -2,6 +2,7 @@
 #include <ucontext.h>
 #include <poll.h>
 #include "config.h"
+#include <pthread.h>
 
 typedef struct {
     struct client_t* first_client;
@@ -47,3 +48,12 @@ typedef struct {
     marshrutka_t *bus;
     int i;
 } thread_arg;
+
+struct server_t {
+    int dvigatel;
+    int density;
+    int thread_counter;
+    pthread_mutex_t lock; //для переменной thread_counter
+    pthread_mutex_t stop; //только одна маршрутка может быть припаркована к остановке
+};
+

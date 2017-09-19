@@ -4,30 +4,6 @@
 #include "event.h"
 #include "main.h"
 
-/*
-void hello(struct client* qw) {
-    char buff[256];
-    char p[1000];
-	*p = 0;
-    FILE *bus_ascii = fopen("bus", "r");
-    if(bus_ascii == NULL) {
-        printf("not found the bus:(\n");
-        exit(1);
-    }
-
-    while(fgets(buff, 256, bus_ascii)) {
-        strncat(p, buff, strlen(buff));
-    }
-    write(qw->connection, p, strlen(p));
-    fclose(bus_ascii);
-
-    char msg[40] = "\nМАРШРУТКА № 442\n";
-    write(qw->connection, msg, strlen(msg));
-    return;	
-}
-
-*/
-
 int empty(struct client_t *Ivan) {
     
     if(Ivan->first_event == NULL) {

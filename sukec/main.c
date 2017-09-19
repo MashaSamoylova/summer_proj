@@ -16,6 +16,32 @@
 #include "babka.h"
 #include "marshrutka.h"
 
+int init_marshrutka(struct server_t *server) {
+    marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
+    avtobus_442->dvigatel = server->dvigatel;
+    
+    avtobus_442->first_client = NULL;
+    avtobus_442->last_client = NULL;
+    avtobus_442->n_clients = 0;
+    avtobus_442->n_babok = 0;
+    avtobus_442->status_window = 1;
+
+    for(int i = 0; i < MAX_CLIENTS; i++) {
+        add_passzhir(avtobus_442);
+        avtobus_442->n_clients++;
+    }
+    
+    for(int i = 0; i < server->density; i++) {
+        add_babka(avtobus_442);
+        avtobus_442->n_babok++;
+    }
+   
+    pthread_mutex_unlock(&server->stop);
+    otpravit_marshrutku(avtobus_442);
+
+    return 0;
+}
+
 int main(int argc, char* argv[]) {
     setbuf ( stdout , NULL ); 
 
@@ -37,30 +63,31 @@ int main(int argc, char* argv[]) {
                 exit(-1);
     }
 
-    pthread_t id;
-    thread_arg ta;
-    ta.i = dvigatel;
-    while(442) {
-		marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
-		avtobus_442->dvigatel = dvigatel;
-		init_marshrutka(avtobus_442);
-
-        for(int i = 0; i < MAX_CLIENTS; i++) {
-            add_passzhir(avtobus_442);
-            avtobus_442->n_clients++;
-        }
-        
-        for(int i = 0; i < density; i++) {
-            add_babka(avtobus_442);
-            avtobus_442->n_babok++;
-        }
-      
-        printf("sukablit\n");
-        ta.bus = avtobus_442;
-	   //FIXME next bus will not go before the last is will not come	
-	    pthread_create(&id, NULL, &otpravit_marshrutku, &ta);
-  	  //  pthread_join(id, NULL);
-        //printf("ДЖОИН\n");
+    struct server_t *server = malloc(sizeof( struct server_t ));
+    if( server == NULL ) {
+        printf("Failed to alloc server\n");
+        exit(-1);
     }
-    return 0;
+
+    pthread_attr_t thread_attr;
+    pthread_attr_init(&thread_attr);
+    pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
+    
+    server->dvigatel = dvigatel;
+    server->density = density;
+    server->thread_counter = 0;
+
+    while(442) {
+        if(server->thread_counter >= MAX_THREADS) {
+            printf("no bases in the garage\n");
+        }
+
+        else {
+            pthread_mutex_lock(&server->stop);
+            pthread_t thread;
+            pthread_create(&thread, &thread_attr, (void *(*)(void*))&init_marshrutka, server);
+            server->thread_counter++;
+        }
+    }
+        return 0;
 }
