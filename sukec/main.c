@@ -92,5 +92,5 @@ int main(int argc, char* argv[]) {
             server->thread_counter++;
         }
     }
-        return 0;
+    return 0;
 }

@@ -2,12 +2,26 @@
 #include "main.h"
 //*очистка памяти*/
 
+int clean_events(struct client_t *Ivan) {
+    printf("чистка событий\n");
+    struct event *arrow = Ivan->first_event;
+    struct event *cup;
+
+    while(arrow) {
+        cup = arrow;
+        arrow = arrow->next_event;
+        free(cup);
+    }
+    return 0;
+}
+
 int kill_babki(marshrutka_t* bus) {
     int k = 0;
     struct babka *Katya = (struct babka*)bus->first_client;
     struct babka *cup;
     while( k < bus->n_babok) {
        cup = Katya;
+       clean_events((struct client_t*)Katya);
        free(Katya->client.context.uc_stack.ss_sp);
        Katya = (struct babka*)Katya->client.next_client;
        free(cup);
@@ -24,6 +38,7 @@ int kill_passazh(marshrutka_t* bus) {
     struct passazhir *cup;
     while( k < bus->n_clients) {
        cup = Tom;
+       clean_events((struct client_t*)Tom);
        free(Tom->client.context.uc_stack.ss_sp);
        Tom = (struct passazhir*)Tom->client.next_client;
        free(cup);
