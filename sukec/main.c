@@ -38,6 +38,9 @@ int init_marshrutka(struct server_t *server) {
    
     pthread_mutex_unlock(&server->stop);
     otpravit_marshrutku(avtobus_442);
+    printf("автобус вернулся в парк\n");
+    vypnut_passazhirov(avtobus_442);
+    scrabwoman(avtobus_442);
 
     return 0;
 }
@@ -86,6 +89,9 @@ int main(int argc, char* argv[]) {
             pthread_mutex_lock(&server->stop);
             pthread_t thread;
             pthread_create(&thread, &thread_attr, (void *(*)(void*))&init_marshrutka, server);
+            sleep(5);
+            free(server);
+            return 0;
             server->thread_counter++;
         }
     }

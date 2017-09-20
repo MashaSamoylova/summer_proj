@@ -1,30 +1,47 @@
 #pragma once
 #include "main.h"
 //*очистка памяти*/
-/*void scrabwoman(marshrutka_t* bus) {
-    struct client* arrow = bus->first_client;
-    struct client* cup;
-    
-    while(arrow) {
-        cup = arrow;
-        free(arrow->context.uc_stack.ss_sp);
-        arrow = arrow->next_client;
-        free(cup);
-    }
 
+int kill_babki(marshrutka_t* bus) {
+    int k = 0;
+    struct babka *Katya = (struct babka*)bus->first_client;
+    struct babka *cup;
+    while( k < bus->n_babok) {
+       cup = Katya;
+       free(Katya->client.context.uc_stack.ss_sp);
+       Katya = (struct babka*)Katya->client.next_client;
+       free(cup);
+       k++;
+    }
+    bus->first_client = (struct client_t*)Katya;
+    printf("бабки удалены\n");
+    return 0;
+}
+
+int kill_passazh(marshrutka_t* bus) {
+    int k = 0;
+    struct passazhir *Tom = (struct passazhir*)bus->first_client;
+    struct passazhir *cup;
+    while( k < bus->n_clients) {
+       cup = Tom;
+       free(Tom->client.context.uc_stack.ss_sp);
+       Tom = (struct passazhir*)Tom->client.next_client;
+       free(cup);
+       k++;
+    }
+    bus->first_client = (struct client_t*)Tom;
+    printf("пассажиры удалены\n");
+    return 0;
+}
+
+
+void scrabwoman(marshrutka_t* bus) {
+
+    /*удалять именно в таком порядке -__-*/
+    kill_passazh(bus);
+    kill_babki(bus);
     free(bus);
-}*/
-
-/*отключение всех клиентов*/
-/*void vypnut_passazhirov(marshrutka_t *bus) {
-    struct client* arrow = bus->first_client;
-    
-    while(arrow) {
-        close(arrow->connection);
-        arrow = arrow->next_client;
-    }
-}*/
-
+}
 
 /*возвращает сокет для всего сервиса*/
 int zavesti_marshrutku() {

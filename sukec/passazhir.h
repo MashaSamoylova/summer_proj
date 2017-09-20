@@ -2,6 +2,19 @@
 #include "main.h"
 #include "client.h"
 
+/*отключение всех клиентов*/
+void vypnut_passazhirov(marshrutka_t *bus) {
+    struct client_t* arrow = bus->first_client;
+    int k = 0;
+    
+    while(k < bus->n_clients) {
+        struct passazhir *Tom = (struct passazhir*)arrow;
+        close(Tom->ufds.fd);
+        arrow = arrow->next_client;
+        k++;
+    }
+}
+
 int write_passazh(struct passazhir* Tom, char* message) {
     Tom->ufds.events = POLLOUT;
     int n = poll(&Tom->ufds, 1, 10000);

@@ -43,12 +43,6 @@ struct babka {
     int hp;
 };
 
-/*for create a thread*/
-typedef struct { 
-    marshrutka_t *bus;
-    int i;
-} thread_arg;
-
 struct server_t {
     int dvigatel;
     int density;
