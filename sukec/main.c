@@ -89,9 +89,6 @@ int main(int argc, char* argv[]) {
             pthread_mutex_lock(&server->stop);
             pthread_t thread;
             pthread_create(&thread, &thread_attr, (void *(*)(void*))&init_marshrutka, server);
-            sleep(5);
-            free(server);
-            return 0;
             server->thread_counter++;
         }
     }

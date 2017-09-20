@@ -51,7 +51,6 @@ void generate_event(int number, int code, struct client_t *Ivan) {
 }
 
 int loop(struct client_t* Ivan) {
-    return 0;
     while(1) {
         printf("client id %d\n", Ivan->id);
         
