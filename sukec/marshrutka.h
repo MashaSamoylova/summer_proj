@@ -26,6 +26,7 @@ void scrabwoman(marshrutka_t* bus) {
         free(arrow->context.uc_stack.ss_sp);
         arrow = arrow->next_client;
         free(cup);
+        k++;
     }
     free(bus);
 }
