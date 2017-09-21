@@ -97,6 +97,7 @@ int insert_client(struct client_t* Ivan) {
     Ivan->next_client = Ivan->bus->first_client;
    
     init_context(Ivan);
+    Ivan->bus->n_clients++;
     return 0;
 }
 

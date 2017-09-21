@@ -141,6 +141,7 @@ int add_passzhir(marshrutka_t* bus) {
     Ivan->ufds.fd = new_client(bus->dvigatel);
     Ivan->client.handler = passazhir_handler;
     Ivan->client.generator = passazhir_generator;
+    bus->n_passzh++;
     hello(Ivan);
     return 0;
 }

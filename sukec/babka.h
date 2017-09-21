@@ -57,6 +57,7 @@ void add_babka(marshrutka_t* bus) {
     Katya->hp = 100;
     Katya->client.handler = baba_handler;
     Katya->client.generator = babka_generator;
+    bus->n_babok++;
 }
 
 

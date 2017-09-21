@@ -29,16 +29,12 @@ int init_marshrutka(struct server_t *server) {
 
     for(int i = 0; i < MAX_CLIENTS; i++) {
         add_passzhir(avtobus_442);
-        avtobus_442->n_passzh++;
     }
     
     for(int i = 0; i < server->density; i++) {
         add_babka(avtobus_442);
-        avtobus_442->n_babok++;
     }
 
-    avtobus_442->n_clients = avtobus_442->n_passzh + avtobus_442->n_babok;
-   
     pthread_mutex_unlock(&server->stop);
     otpravit_marshrutku(avtobus_442);
     printf("автобус вернулся в парк\n");
