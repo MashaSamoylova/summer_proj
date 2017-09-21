@@ -8,6 +8,7 @@ typedef struct {
     struct client_t* first_client;
     struct client_t* last_client;
     int n_clients;
+    int n_passzh;
     int n_babok;
     int dvigatel;
     int status_window; //1 is open, 0 is close

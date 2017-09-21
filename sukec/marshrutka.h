@@ -20,7 +20,7 @@ void scrabwoman(marshrutka_t* bus) {
     int k = 0;
     struct client_t* arrow = bus->first_client;
     struct client_t* cup;
-    while(k < (bus->n_clients + bus->n_babok)) {
+    while(k < bus->n_clients) {
         cup = arrow;
         clean_events(arrow);
         free(arrow->context.uc_stack.ss_sp);

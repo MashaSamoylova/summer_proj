@@ -22,19 +22,22 @@ int init_marshrutka(struct server_t *server) {
     
     avtobus_442->first_client = NULL;
     avtobus_442->last_client = NULL;
+    avtobus_442->n_passzh = 0;
     avtobus_442->n_clients = 0;
     avtobus_442->n_babok = 0;
     avtobus_442->status_window = 1;
 
     for(int i = 0; i < MAX_CLIENTS; i++) {
         add_passzhir(avtobus_442);
-        avtobus_442->n_clients++;
+        avtobus_442->n_passzh++;
     }
     
     for(int i = 0; i < server->density; i++) {
         add_babka(avtobus_442);
         avtobus_442->n_babok++;
     }
+
+    avtobus_442->n_clients = avtobus_442->n_passzh + avtobus_442->n_babok;
    
     pthread_mutex_unlock(&server->stop);
     otpravit_marshrutku(avtobus_442);
