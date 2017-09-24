@@ -2,19 +2,6 @@
 #include "main.h"
 //*очистка памяти*/
 
-int clean_events(struct client_t *Ivan) {
-    printf("чистка событий\n");
-    struct event *arrow = Ivan->first_event;
-    struct event *cup;
-
-    while(arrow) {
-        cup = arrow;
-        arrow = arrow->next_event;
-        free(cup);
-    }
-    return 0;
-}
-
 void scrabwoman(marshrutka_t* bus) {
 
     int k = 0;

@@ -25,6 +25,7 @@ struct event {
 struct client_t {
     marshrutka_t *bus;
     struct client_t *next_client;
+    struct client_t *prev_client;
     int id;
     struct event *first_event;
     struct event *last_event;    

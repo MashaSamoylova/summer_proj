@@ -15,7 +15,25 @@ void vypnut_passazhirov(marshrutka_t *bus) {
     }
 }
 
-int write_passazh(struct passazhir* Tom, char* message) {
+int delete_passazh(struct passazhir* Tom) {
+    struct client_t *Ivan = (struct client_t*)Tom;
+    clean_events(Ivan);
+    free(Ivan->context.uc_stack.ss_sp);
+    Ivan->prev_client->next_client = Ivan->next_client;
+    struct client_t* cup = Ivan->next_client;
+    Ivan->bus->n_clients--;
+    Ivan->bus->n_passzh--;
+    free(Tom);
+    setcontext(&cup->context);
+    return 0;
+}
+
+int detect_disconnect(struct passazhir* Tom) {
+    Tom->ufds.events = POLLOUT;
+    return poll(&Tom->ufds, 1, 10000);
+}
+
+int try_write(struct passazhir* Tom, char* message) {
     Tom->ufds.events = POLLOUT;
     int n = poll(&Tom->ufds, 1, 10000);
 
@@ -33,6 +51,16 @@ int write_passazh(struct passazhir* Tom, char* message) {
         return n;
     }
     return -1;
+}
+
+int write_passazh(struct passazhir *Tom, char* message) {
+    int k = 3;
+    while(k > 0) {
+        if(try_write(Tom, message) != -1)
+            return 0;
+       k--;
+    }
+    return -1;        
 }
 
 void hello(struct passazhir* Tom) {
@@ -56,7 +84,7 @@ void hello(struct passazhir* Tom) {
     return;	
 }
 
-int read_answer(struct passazhir* Tom, char *buffer, int size) {
+int try_read_answer(struct passazhir* Tom, char *buffer, int size) {
     Tom->ufds.events = POLLIN;
     int n = poll(&Tom->ufds, 1, 10000);
     if(n < 0) {
@@ -76,6 +104,16 @@ int read_answer(struct passazhir* Tom, char *buffer, int size) {
     return -1;
 }
 
+int read_answer(struct passazhir* Tom, char *buffer, int size) {
+    int k = 3;
+    while(k > 0) { 
+    if(try_read_answer(Tom, buffer, size) != -1)
+            return 0;
+       k--;
+    }
+    return -1; 
+}
+
 int open_window(struct passazhir *Tom) {
     char buff[100] = "\0";
     write_passazh(Tom, "1.открыть окно\n2.ударить бабку\n");
@@ -87,6 +125,10 @@ int open_window(struct passazhir *Tom) {
 int passazhir_handler(struct client_t* Ivan) {
 
     struct passazhir *Tom = (struct passazhir*)Ivan;
+   
+    if(detect_disconnect(Tom) == -1) {
+        delete_passazh(Tom);
+    }
     
     while( !empty(Ivan) ) {
         int code = Ivan->first_event->code;

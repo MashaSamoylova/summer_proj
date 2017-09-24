@@ -4,6 +4,19 @@
 #include "event.h"
 #include "main.h"
 
+int clean_events(struct client_t *Ivan) {
+    printf("чистка событий\n");
+    struct event *arrow = Ivan->first_event;
+    struct event *cup;
+
+    while(arrow) {
+        cup = arrow;
+        arrow = arrow->next_event;
+        free(cup);
+    }
+    return 0;
+}
+
 int empty(struct client_t *Ivan) {
     
     if(Ivan->first_event == NULL) {
@@ -52,6 +65,10 @@ void generate_event(int number, int code, struct client_t *Ivan) {
 
 int loop(struct client_t* Ivan) {
     while(1) {
+        if(Ivan->bus->n_passzh == 0) {
+            sleep(10);
+            return 0;
+        }
         printf("client id %d\n", Ivan->id);
         
         if(!empty(Ivan)) {
@@ -93,6 +110,7 @@ int insert_client(struct client_t* Ivan) {
     }
 
     Ivan->bus->last_client->next_client = Ivan;
+    Ivan->prev_client = Ivan->bus->last_client;
     Ivan->bus->last_client = Ivan;
     Ivan->next_client = Ivan->bus->first_client;
    
