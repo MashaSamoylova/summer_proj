@@ -1,6 +1,6 @@
 #pragma once
 
-#define MAX_CLIENTS 2 
+#define MAX_CLIENTS 3 
 #define MAX_PASSAZHIR 4
 #define MAX_SEATS   11
 #define MAX_THREADS 10

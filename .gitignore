@@ -1,3 +1,4 @@
-main
+sukec/main
+sukec/*.swp
+sukec/*.o
 *.swp
-tags
