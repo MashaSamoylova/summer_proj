@@ -26,7 +26,6 @@ int empty(struct client_t *Ivan) {
 }
 
 int delete_client(struct client_t * Ivan) {
-    printf("dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
     clean_events(Ivan);
     free(Ivan->context.uc_stack.ss_sp);
     Ivan->prev_client->next_client = Ivan->next_client;
