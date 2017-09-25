@@ -15,17 +15,10 @@ void vypnut_passazhirov(marshrutka_t *bus) {
     }
 }
 
-int delete_passazh(struct passazhir* Tom) {
+void delete_passazh(struct passazhir* Tom) {
     struct client_t *Ivan = (struct client_t*)Tom;
-    clean_events(Ivan);
-    free(Ivan->context.uc_stack.ss_sp);
-    Ivan->prev_client->next_client = Ivan->next_client;
-    struct client_t* cup = Ivan->next_client;
-    Ivan->bus->n_clients--;
     Ivan->bus->n_passzh--;
-    free(Tom);
-    setcontext(&cup->context);
-    return 0;
+    delete_client(Ivan);
 }
 
 int detect_disconnect(struct passazhir* Tom) {

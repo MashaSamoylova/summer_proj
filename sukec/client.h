@@ -25,6 +25,18 @@ int empty(struct client_t *Ivan) {
     return 0;
 }
 
+int delete_client(struct client_t * Ivan) {
+    printf("dAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\n");
+    clean_events(Ivan);
+    free(Ivan->context.uc_stack.ss_sp);
+    Ivan->prev_client->next_client = Ivan->next_client;
+    struct client_t* cup = Ivan->next_client;
+    Ivan->bus->n_clients--;
+    free(Ivan);
+    setcontext(&cup->context);
+    return 0;
+}
+
 void add_event(struct client_t *Ivan, struct event *sc) {
     
     if( empty(Ivan) ) { //queue is empty

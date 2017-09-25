@@ -61,6 +61,11 @@ void add_babka(marshrutka_t* bus) {
     bus->n_babok++;
 }
 
+void delete_babka(struct babka* Katya) {
+    struct client_t *Klava = (struct client_t*)Katya;
+    Klava->bus->n_babok--;
+    delete_client(Klava);
+}
 
 /*void generate_close( struct babka* Katya, struct client* Ivan ) {
     generate_event(Ivan, 2, Katya->id);    
