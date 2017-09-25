@@ -12,3 +12,6 @@ passazhir: passazhir.h passazhir.c client.h main.h
 
 marshrutka: marshrutka.h marshrutka.c main.h
 	gcc -c marshrutka.c
+
+clean: 
+	rm main; rm *.o
