@@ -1,6 +1,4 @@
 #include "babka.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 void generate_open(struct client_t* Katya) {
    //нужно решить как генерировать события, если id пассажиров 0 1 2 , 1 уходит, то здесь с сегфолтом упадет через 
