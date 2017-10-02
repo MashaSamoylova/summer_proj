@@ -105,7 +105,8 @@ int read_answer(struct passazhir* Tom, char *buffer, int size) {
     return -1; 
 }
 
-int open_window(struct passazhir *Tom) {
+int open_window(struct client_t *Ivan) {
+    struct passazhir *Tom = (struct passazhir*)Ivan;
     char buff[100] = "\0";
     write_passazh(Tom, "1.открыть окно\n2.ударить бабку\n");
     read_answer(Tom, buff, 10);
@@ -174,6 +175,7 @@ int add_passzhir(marshrutka_t* bus) {
     Ivan->ufds.fd = new_client(bus->dvigatel);
     Ivan->client.handler = passazhir_handler;
     Ivan->client.generator = passazhir_generator;
+    strcpy(Ivan->client.role, "passazhir");
     bus->n_passzh++;
     hello(Ivan);
     return 0;

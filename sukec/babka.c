@@ -1,17 +1,17 @@
 #include "babka.h"
 
-void generate_open(struct client_t* Katya) {
+void ask_open(struct client_t* Katya) {
    //нужно решить как генерировать события, если id пассажиров 0 1 2 , 1 уходит, то здесь с сегфолтом упадет через 
     int number = rand()%Katya->bus->n_passzh;
     printf("generate_open number %d id babi %d\n", number, Katya->id);
-    generate_event(number, 1, Katya);
+    generate_event(number, "open", Katya);
 }
 
 int babka_generator(struct client_t* Katya){
     
     //window is open
     if(Katya->bus->status_window) {
-        generate_open(Katya);
+     //   generate_open(Katya);
     }
     else{
         //generate_close(Katya);
@@ -56,6 +56,7 @@ void add_babka(marshrutka_t* bus) {
     Katya->hp = 100;
     Katya->client.handler = baba_handler;
     Katya->client.generator = babka_generator;
+    strcpy(Katya->client.role, "babka");
     bus->n_babok++;
 }
 

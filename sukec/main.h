@@ -30,6 +30,7 @@ struct client_t {
     int id;
     struct event *first_event;
     struct event *last_event;    
+    char role[20];
     int (*handler) (struct client_t*);
     int (*generator) (struct client_t*);
     ucontext_t context;

@@ -52,7 +52,7 @@ void delete_event(struct client_t *Ivan) {
     free(cup);
 }
 
-void generate_event(int number, int code, struct client_t *Ivan) {
+void generate_event(int number, char* name, struct client_t *Ivan) {
     
     struct client_t *arrow = Ivan->bus->first_client;
    
@@ -63,11 +63,28 @@ void generate_event(int number, int code, struct client_t *Ivan) {
     }
 
     struct event *sc = calloc(1, sizeof(struct event));
-    sc->code = code;
+    strcpy(sc->name, name);
     sc->ask_id = Ivan->id;
     sc->next_event = NULL;
 
     add_event(arrow, sc);
+}
+
+int main_handler(struct client_t * Ivan) {
+    while( !empty(Ivan) ) {
+
+        if(!strcmp(Ivan->first_event->name, "ask open window")) {
+            ask_open(Ivan);
+        }
+        
+        if(!strcmp(Ivan->first_event->name, "open window")) {
+            open_window(Ivan);
+        }
+        
+        delete_event(Ivan);
+        printf("event is handled\n");
+
+    }
 }
 
 int loop(struct client_t* Ivan) {
@@ -79,7 +96,7 @@ int loop(struct client_t* Ivan) {
         printf("client id %d\n", Ivan->id);
         
         if(!empty(Ivan)) {
-            Ivan->handler(Ivan);
+            main_handler(Ivan);
         }
         
         Ivan->generator(Ivan);
