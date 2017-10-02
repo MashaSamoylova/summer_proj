@@ -2,3 +2,6 @@ sukec/main
 sukec/*.swp
 sukec/*.o
 *.swp
+.idea/
+cmake-build-debug/
+coroutine/
