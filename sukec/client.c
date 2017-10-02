@@ -70,21 +70,28 @@ void generate_event(int number, char* name, struct client_t *Ivan) {
     add_event(arrow, sc);
 }
 
-int main_handler(struct client_t * Ivan) {
+int main_generator(struct client_t *Ivan) {
+    if( !strcmp(Ivan->role, "babka")) {
+        generate_event(Ivan->id, "ask open window", Ivan);
+    }
+    return 0;
+}
+
+int main_handler(struct client_t *Ivan) {
     while( !empty(Ivan) ) {
 
-        if(!strcmp(Ivan->first_event->name, "ask open window")) {
+        if( !strcmp(Ivan->first_event->name, "ask open window") ) {
             ask_open(Ivan);
         }
         
-        if(!strcmp(Ivan->first_event->name, "open window")) {
+        if( !strcmp(Ivan->first_event->name, "open window") ) {
             open_window(Ivan);
         }
         
         delete_event(Ivan);
         printf("event is handled\n");
-
     }
+    return 0;
 }
 
 int loop(struct client_t* Ivan) {
@@ -99,7 +106,7 @@ int loop(struct client_t* Ivan) {
             main_handler(Ivan);
         }
         
-        Ivan->generator(Ivan);
+        main_generator(Ivan);
         swapcontext(&Ivan->context, &Ivan->next_client->context);
     }
 }
