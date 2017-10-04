@@ -72,21 +72,23 @@ void generate_event(int number, char* name, struct client_t *Ivan) {
 
 int main_generator(struct client_t *Ivan) {
     if( !strcmp(Ivan->role, "babka")) {
-        generate_event(Ivan->id, "ask open window", Ivan);
+        generate_event(Ivan->id, "ask open window\0", Ivan);
     }
     return 0;
 }
 
 int main_handler(struct client_t *Ivan) {
+    ENTRY e, *ep;
     while( !empty(Ivan) ) {
-
-        if( !strcmp(Ivan->first_event->name, "ask open window") ) {
-            ask_open(Ivan);
+        
+        e.key = Ivan->first_event->name;
+        ep = hsearch(e, FIND);
+        if(ep == NULL) {
+            printf("дин дон голубой гандон\n");
         }
         
-        if( !strcmp(Ivan->first_event->name, "open window") ) {
-            open_window(Ivan);
-        }
+        int (*h)(struct client_t*) = (int(*)(struct client_t*))ep->data;
+        h(Ivan);
         
         delete_event(Ivan);
         printf("event is handled\n");

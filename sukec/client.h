@@ -2,6 +2,7 @@
 #include <ucontext.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <search.h>
 
 #include "main.h"
 

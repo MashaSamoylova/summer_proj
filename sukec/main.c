@@ -18,8 +18,8 @@
 #include "marshrutka.h"
 
 static char *actions[] = {
-    "ask open window"
-    "open window", 
+    "ask open window",
+    "open window"
 };
 
 static int (*handlers[])(struct client_t*) = {
@@ -57,7 +57,7 @@ int init_marshrutka(struct server_t *server) {
 
 
 int create_table() {
-    int size = sizeof(actions)/sizeof(char*);
+    int size = sizeof(actions)/sizeof(char*) + 1;
     
     ENTRY e, *ep;
     hcreate(size+30);
@@ -102,9 +102,11 @@ int zavesti_marshrutku() {
         return 0;
     }
     listen(dvigatel, 5);
+    
     if( create_table() == -1) {
         return 0;
     };
+    
     return dvigatel;
 }
 

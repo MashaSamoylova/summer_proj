@@ -4,7 +4,7 @@ int ask_open(struct client_t* Katya) {
    //нужно решить как генерировать события, если id пассажиров 0 1 2 , 1 уходит, то здесь с сегфолтом упадет через 
     int number = rand()%Katya->bus->n_passzh;
     printf("generate_open number %d id babi %d\n", number, Katya->id);
-    generate_event(number, "open window", Katya);
+    generate_event(number, "open window\0", Katya);
     return 0;
 }
 
