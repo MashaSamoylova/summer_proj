@@ -72,7 +72,7 @@ void generate_event(int number, char* name, struct client_t *Ivan) {
 
 int main_generator(struct client_t *Ivan) {
     if( !strcmp(Ivan->role, "babka")) {
-        generate_event(Ivan->id, "ask open window\0", Ivan);
+        generate_event(Ivan->id, "ask open window", Ivan);
     }
     return 0;
 }
