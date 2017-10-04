@@ -16,6 +16,16 @@
 #include "babka.h"
 #include "marshrutka.h"
 
+static char *data[] = {
+    "ask open window"
+    "open window", 
+};
+
+static int (*handlers[])(struct client_t*) = {
+    ask_open,
+    open_window,
+};
+
 int init_marshrutka(struct server_t *server) {
     marshrutka_t* avtobus_442 = calloc(1, sizeof(marshrutka_t));
     avtobus_442->dvigatel = server->dvigatel;

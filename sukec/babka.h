@@ -9,5 +9,5 @@ void add_babka(marshrutka_t* bus);
 void delete_babka(struct babka* Katya);
 
 //возможные события у персонажа
-void ask_open(struct client_t* Katya);
+int ask_open(struct client_t* Katya);
 
