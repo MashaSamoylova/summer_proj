@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <fcntl.h>
+#include <search.h>
 
 #include "main.h"
 
@@ -16,7 +17,7 @@
 #include "babka.h"
 #include "marshrutka.h"
 
-static char *data[] = {
+static char *actions[] = {
     "ask open window"
     "open window", 
 };
@@ -52,6 +53,59 @@ int init_marshrutka(struct server_t *server) {
     scrabwoman(avtobus_442);
 
     return 0;
+}
+
+
+int create_table() {
+    int size = sizeof(actions)/sizeof(char*);
+    
+    ENTRY e, *ep;
+    hcreate(size+30);
+
+    for(int i = 0; i < size; i++) {
+        e.key = actions[i];
+        e.data = (void*)handlers[i];
+        ep = hsearch(e, ENTER);
+        if( ep == NULL) {
+            fprintf(stderr, "entry failed\n");
+            return -1;
+        }
+    }
+    return 0;
+}
+
+/*возвращает сокет для всего сервиса*/
+int zavesti_marshrutku() {
+    /*
+#ifndef PRAVILNIE_ZAPCHASTI
+    return 0;
+#endif
+*/
+
+    struct sockaddr_in server;
+    int dvigatel = socket(AF_INET, SOCK_STREAM, 0);
+
+    if (dvigatel == -1) {
+        fprintf(stderr, "Could not create socket\n");
+        return 0; 
+    }
+
+    int yes = 1;
+    setsockopt(dvigatel, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons(PORT);
+
+    if (bind(dvigatel, (struct sockaddr *) &server, sizeof(server)) < 0) {
+        fprintf(stderr, "ERROR on binding\n");
+        return 0;
+    }
+    listen(dvigatel, 5);
+    if( create_table() == -1) {
+        return 0;
+    };
+    return dvigatel;
 }
 
 int main(int argc, char* argv[]) {
