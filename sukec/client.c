@@ -84,7 +84,7 @@ int main_handler(struct client_t *Ivan) {
         e.key = Ivan->first_event->name;
         ep = hsearch(e, FIND);
         if(ep == NULL) {
-            printf("дин дон голубой гандон\n");
+            printf("не найден обработчик\n");
         }
         
         int (*h)(struct client_t*) = (int(*)(struct client_t*))ep->data;
