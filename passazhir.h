@@ -21,4 +21,5 @@ int add_passzhir(marshrutka_t* bus);
 
 //возможные события у персонажа
 int open_window(struct client_t *Ivan);
+int menu(struct client_t *Ivan);
 

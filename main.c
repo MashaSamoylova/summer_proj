@@ -19,12 +19,14 @@
 
 static char *actions[] = {
     "ask open window",
-    "open window"
+    "open window",
+    "menu",
 };
 
 static int (*handlers[])(struct client_t*) = {
     ask_open,
     open_window,
+    menu,
 };
 
 int init_marshrutka(struct server_t *server) {
@@ -57,7 +59,7 @@ int init_marshrutka(struct server_t *server) {
 
 
 int create_table() {
-    int size = sizeof(actions)/sizeof(char*) + 1;
+    int size = sizeof(actions)/sizeof(char*);
     
     ENTRY e, *ep;
     hcreate(size+30);

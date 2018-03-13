@@ -72,7 +72,7 @@ void generate_event(int number, char* name, struct client_t *Ivan) {
 
 int main_generator(struct client_t *Ivan) {
     if( !strcmp(Ivan->role, "babka")) {
-        generate_event(Ivan->id, "ask open window", Ivan);
+        generate_event(Ivan->id, "menu", Ivan);
     }
     return 0;
 }
@@ -82,6 +82,8 @@ int main_handler(struct client_t *Ivan) {
     while( !empty(Ivan) ) {
         
         e.key = Ivan->first_event->name;
+
+        printf("name event %s\n", e.key );
         ep = hsearch(e, FIND);
         if(ep == NULL) {
             printf("не найден обработчик\n");

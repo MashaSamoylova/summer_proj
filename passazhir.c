@@ -29,6 +29,7 @@ int try_write(struct passazhir* Tom, char* message) {
     int n = poll(&Tom->ufds, 1, 10000);
 
     if (n < 0) {
+        printf("poll error\n");
         return -1; //poll error
     }
 
@@ -38,18 +39,23 @@ int try_write(struct passazhir* Tom, char* message) {
 
     if(Tom->ufds.revents == POLLOUT) {
         n = send(Tom->ufds.fd, message, strlen(message), 0);
-        if(n <= 0) return -1;
+        if(n <= 0) {
+            printf("send error\n");
+            return -1;
+        }
         return n;
     }
+    printf("че\n");
     return -1;
 }
 
 int write_passazh(struct passazhir *Tom, char* message) {
     int k = 3;
     while(k > 0) {
-        if(try_write(Tom, message) != -1)
+        if(try_write(Tom, message) != -1) {
             return 0;
-       k--;
+        }
+        k--;
     }
     return -1;        
 }
@@ -98,9 +104,10 @@ int try_read_answer(struct passazhir* Tom, char *buffer, int size) {
 int read_answer(struct passazhir* Tom, char *buffer, int size) {
     int k = 3;
     while(k > 0) { 
-    if(try_read_answer(Tom, buffer, size) != -1)
-            return 0;
-       k--;
+        if(try_read_answer(Tom, buffer, size) != -1) {
+                return 0;
+        }
+        k--;
     }
     return -1; 
 }
@@ -111,6 +118,26 @@ int open_window(struct client_t *Ivan) {
     write_passazh(Tom, "1.открыть окно\n2.ударить бабку\n");
     read_answer(Tom, buff, 10);
     printf("%s\n", buff);
+    return 0;
+}
+
+int menu(struct client_t *Ivan) {
+    printf("вызвалось меню\n");
+    struct passazhir *Tom = (struct passazhir*)Ivan;
+    char buff[100] = "\0";
+   printf("%d\n", write_passazh(Tom, "MENU 442 маршрута:\n1.оплатить разовый проезд\n2.купить проездной\n"));
+    if(!read_answer(Tom, buff, 10)) {
+        int answ = atoi(buff);
+        switch(answ){
+            case 1:
+                generate_event(Ivan->id, "buy the ticket", Ivan);
+            case 2:
+                generate_event(Ivan->id, "buy the travel card", Ivan);
+            default:
+                write_passazh(Tom, "Ошибка чтения ответа");
+        }
+    };
+
     return 0;
 }
 
