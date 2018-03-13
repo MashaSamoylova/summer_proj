@@ -1,7 +1,5 @@
-sukec/main
-sukec/*.swp
-sukec/*.o
+main
 *.swp
+*.o
 .idea/
 cmake-build-debug/
-coroutine/
